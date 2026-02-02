@@ -1,11 +1,12 @@
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using System.Data;
+using Zoorganize.Database;
 
 namespace Zoorganize
 {
     public partial class Form1 : Form
     {
-        private string connectionString = "Data Source=Database/Zoorganize.db";
         public Form1()
         {
             InitializeComponent();
@@ -13,20 +14,16 @@ namespace Zoorganize
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            using SqliteConnection conn =
-                new SqliteConnection(connectionString);
-            conn.Open();
+            
 
-            var cmd = conn.CreateCommand();
-            cmd.CommandText =
-                "SELECT Id FROM Pfleger LIMIT 1";
+            using var context = new AppDbContext();
+            
+            var ersterPfleger = context.Pfleger.FirstOrDefault();
 
-            object result = cmd.ExecuteScalar();
-
-            if (result != null)
-                MessageBox.Show(result.ToString());
+            if (ersterPfleger != null)
+                MessageBox.Show($"Id: {ersterPfleger.Id}\nName: {ersterPfleger.Name}");
             else
-                MessageBox.Show("Keine Daten in der Tabelle.");
+                MessageBox.Show("Keine Pfleger in der Datenbank gefunden.");
         }
     }
 }
