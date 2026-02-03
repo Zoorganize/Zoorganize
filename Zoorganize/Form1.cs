@@ -15,7 +15,6 @@ namespace Zoorganize
         private void Form1_Load(object sender, EventArgs e)
         {
             
-
             using var context = new AppDbContext();
             
             var ersterPfleger = context.Pfleger.FirstOrDefault();
