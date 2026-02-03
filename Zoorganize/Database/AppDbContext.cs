@@ -1,18 +1,18 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Zoorganize.Database.Models;
 
 namespace Zoorganize.Database
 {
     public class AppDbContext : DbContext
     {
-        public DbSet<Pfleger> Pfleger { get; set; }
+        public DbSet<Keeper> Keepers { get; set; }
         public DbSet<Animal> Animals { get; set; }
         public DbSet<VeterinaryAppointment> VeterinaryAppointments { get; set; }
         public DbSet<ExternalZooStay> ExternalZooStays { get; set; }
+        public DbSet<Species> Species { get; set; }
+        public DbSet<AnimalEnclosure> AnimalEnclosures { get; set; }
 
+        //TODO: OnModelCreating for relationships plus migrations
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Animal>().HasMany(a => a.VeterinaryAppointments)
