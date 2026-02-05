@@ -36,17 +36,18 @@
             panel1.Dock = DockStyle.Fill;
             panel1.Location = new Point(0, 0);
             panel1.Name = "panel1";
-            panel1.Size = new Size(800, 450);
+            panel1.Size = new Size(484, 611);
             panel1.TabIndex = 0;
+            panel1.Paint += panel1_Paint;
             // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(484, 611);
             Controls.Add(panel1);
             Name = "MainForm";
-            Text = "MainForm";
+            Text = "ZoOrganize";
             Load += MainForm_Load;
             ResumeLayout(false);
         }

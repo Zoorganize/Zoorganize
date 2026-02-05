@@ -10,9 +10,14 @@ namespace Zoorganize.Pages
 {
     public partial class MainPage : Form
     {
+        string[] appointments = {"TEst line", "Test line2", "heres an appointment"};
         public MainPage()
         {
             InitializeComponent();
+            appointmentList.Multiline = true;
+            appointmentList.ScrollBars = ScrollBars.Vertical;
+            appointmentList.ReadOnly = true;
+            appointmentList.Text = string.Join(Environment.NewLine, appointments);
         }
 
         private void button1_Click(object sender, EventArgs e)

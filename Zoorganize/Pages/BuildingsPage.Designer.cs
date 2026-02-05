@@ -34,21 +34,22 @@
             // 
             // button1
             // 
-            button1.Location = new Point(402, 230);
+            button1.Font = new Font("Segoe UI", 15F);
+            button1.Location = new Point(12, 548);
             button1.Name = "button1";
-            button1.Size = new Size(145, 84);
+            button1.Size = new Size(150, 40);
             button1.TabIndex = 0;
-            button1.Text = "Zu MainPage";
+            button1.Text = "Zurück";
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Font = new Font("Segoe UI", 18F);
-            label1.Location = new Point(192, 251);
+            label1.Font = new Font("Segoe UI", 25F);
+            label1.Location = new Point(12, 9);
             label1.Name = "label1";
-            label1.Size = new Size(170, 32);
+            label1.Size = new Size(237, 46);
             label1.TabIndex = 1;
             label1.Text = "Buildings Page";
             // 
@@ -56,7 +57,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(500, 600);
             Controls.Add(label1);
             Controls.Add(button1);
             FormBorderStyle = FormBorderStyle.None;

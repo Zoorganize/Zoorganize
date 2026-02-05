@@ -27,5 +27,10 @@ namespace Zoorganize
             panel1.Controls.Add(mainPage);
             mainPage.Show();
         }
+
+        private void panel1_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
     }
 }
