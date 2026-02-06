@@ -30,6 +30,8 @@
         {
             button1 = new Button();
             label1 = new Label();
+            addWorker = new Button();
+            workerOverview = new FlowLayoutPanel();
             SuspendLayout();
             // 
             // button1
@@ -52,14 +54,36 @@
             label1.Size = new Size(212, 46);
             label1.TabIndex = 1;
             label1.Text = "Worker Page";
+            //
+            // Panel1
+            //
+            workerOverview.Location = new Point(12, 125);
+            workerOverview.AutoScroll = true;
+            workerOverview.FlowDirection = FlowDirection.TopDown;
+            workerOverview.WrapContents = false;
+            workerOverview.Name = "typeOverview";
+            workerOverview.Size = new Size(199, 412);
+            workerOverview.TabIndex = 3;
+            // 
+            // button2
+            // 
+            addWorker.Location = new Point(12, 58);
+            addWorker.Name = "addWorker";
+            addWorker.Size = new Size(197, 29);
+            addWorker.TabIndex = 2;
+            addWorker.Text = "Mitarbeiter hinzufügen";
+            addWorker.UseVisualStyleBackColor = true;
+            addWorker.Click += AddWorker_Click;
             // 
             // WorkersPage
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(500, 600);
+            ClientSize = new Size(447, 600);
+            Controls.Add(addWorker);
             Controls.Add(label1);
             Controls.Add(button1);
+            Controls.Add(workerOverview);
             FormBorderStyle = FormBorderStyle.None;
             Name = "WorkersPage";
             Text = "WorkersPage";
@@ -71,5 +95,7 @@
 
         private Button button1;
         private Label label1;
+        private Button addWorker;
+        private FlowLayoutPanel workerOverview;
     }
 }

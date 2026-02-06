@@ -20,7 +20,6 @@ namespace Zoorganize.Pages
     {
         //Platzhalter für liste von Animal[] 
         List<Animal> animals = new List<Animal>();
-        List<string> speciesList = new List<string>();
         public AnimalsPage()
         {
             InitializeComponent();
@@ -113,7 +112,7 @@ namespace Zoorganize.Pages
             public Animal animal { get; private set; }
             public AnimalForm()
             {
-                Text = "Add Animal";
+                Text = "Tier hinzufügen";
                 Width = 300;
                 Height = 300;
                 name.Text = "Name";
