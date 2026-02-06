@@ -53,7 +53,7 @@
             label1.Name = "label1";
             label1.Size = new Size(212, 46);
             label1.TabIndex = 1;
-            label1.Text = "Worker Page";
+            label1.Text = "Mitarbeiter verwalten";
             //
             // Panel1
             //

@@ -140,6 +140,15 @@ namespace Zoorganize.Pages
             private void Submit_Click(object? sender, EventArgs e)
             {
                 //Hier würde die Logik zum Hinzufügen des Tieres zur Liste der Tiere implementiert werden
+                try 
+                {
+                    int.Parse(age.Text);
+                }
+                catch (FormatException)
+                {
+                    MessageBox.Show("Bitte geben Sie eine gültige Zahl für das Alter ein.");
+                    return;
+                }
                 Animal newAnimal = new Animal
                 {
                     Name = name.Text,

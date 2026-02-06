@@ -30,6 +30,11 @@
         {
             button1 = new Button();
             label1 = new Label();
+            penButton = new Button();
+            workerButton = new Button();
+            visitorButton = new Button();
+            addBuilding = new Button();
+            showBuildings = new FlowLayoutPanel();
             SuspendLayout();
             // 
             // button1
@@ -49,21 +54,73 @@
             label1.Font = new Font("Segoe UI", 25F);
             label1.Location = new Point(12, 9);
             label1.Name = "label1";
-            label1.Size = new Size(237, 46);
+            label1.Size = new Size(309, 46);
             label1.TabIndex = 1;
-            label1.Text = "Buildings Page";
+            label1.Text = "Gebäude verwalten";
+            // 
+            // penButton
+            // 
+            penButton.Font = new Font("Segoe UI", 15F);
+            penButton.Location = new Point(12, 58);
+            penButton.Name = "penButton";
+            penButton.Size = new Size(140, 50);
+            penButton.TabIndex = 2;
+            penButton.Text = "Gehege";
+            penButton.UseVisualStyleBackColor = true;
+            penButton.Click += penButton_Click;
+            // 
+            // workerButton
+            // 
+            workerButton.Font = new Font("Segoe UI", 15F);
+            workerButton.Location = new Point(348, 58);
+            workerButton.Name = "workerButton";
+            workerButton.Size = new Size(140, 50);
+            workerButton.TabIndex = 3;
+            workerButton.Text = "Mitarbeiter";
+            workerButton.UseVisualStyleBackColor = true;
+            workerButton.Click += workerButton_Click;
+            // 
+            // visitorButton
+            // 
+            visitorButton.Font = new Font("Segoe UI", 15F);
+            visitorButton.Location = new Point(181, 58);
+            visitorButton.Name = "visitorButton";
+            visitorButton.Size = new Size(140, 50);
+            visitorButton.TabIndex = 4;
+            visitorButton.Text = "Besucher";
+            visitorButton.UseVisualStyleBackColor = true;
+            visitorButton.Click += visitorButton_Click;
+            // 
+            // addBuilding
+            // 
+            addBuilding.Location = new Point(12, 114);
+            addBuilding.Name = "addBuilding";
+            addBuilding.Size = new Size(202, 25);
+            addBuilding.TabIndex = 5;
+            addBuilding.Text = "Neues Gebäude hinzufügen";
+            addBuilding.UseVisualStyleBackColor = true;
+            addBuilding.Click += button2_Click;
+            // 
+            // showBuildings
+            // 
+            showBuildings.Location = new Point(14, 140);
+            showBuildings.Name = "showBuildings";
+            showBuildings.TabIndex = 6;
+            showBuildings.
             // 
             // BuildingsPage
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
-            AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(500, 600);
+            Controls.Add(showBuildings);
+            Controls.Add(addBuilding);
+            Controls.Add(visitorButton);
+            Controls.Add(workerButton);
+            Controls.Add(penButton);
             Controls.Add(label1);
             Controls.Add(button1);
             FormBorderStyle = FormBorderStyle.None;
             Name = "BuildingsPage";
             Text = "BuildingsPage";
-            Load += BuildingsPage_Load;
             ResumeLayout(false);
             PerformLayout();
         }
@@ -72,5 +129,10 @@
 
         private Button button1;
         private Label label1;
+        private Button penButton;
+        private Button workerButton;
+        private Button visitorButton;
+        private Button addBuilding;
+        private FlowLayoutPanel showBuildings;
     }
 }
