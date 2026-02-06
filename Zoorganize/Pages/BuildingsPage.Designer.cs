@@ -1,4 +1,6 @@
-﻿namespace Zoorganize.Pages
+﻿using System;
+
+namespace Zoorganize.Pages
 {
     partial class BuildingsPage
     {
@@ -35,6 +37,7 @@
             visitorButton = new Button();
             addBuilding = new Button();
             showBuildings = new FlowLayoutPanel();
+            delete = new Button();
             SuspendLayout();
             // 
             // button1
@@ -47,6 +50,16 @@
             button1.Text = "Zurück";
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
+            //
+            //detele Button
+            //
+            delete.Font = new Font("Segoe UI", 12F);
+            delete.Location = new Point(230, 114);
+            delete.Name = "delete";
+            delete.Size = new Size(150, 25);
+            delete.TabIndex = 0;
+            delete.Text = "Löschen";
+            delete.Click += delete_Click;
             // 
             // label1
             // 
@@ -118,6 +131,7 @@
             Controls.Add(penButton);
             Controls.Add(label1);
             Controls.Add(button1);
+            Controls.Add(delete);
             FormBorderStyle = FormBorderStyle.None;
             Name = "BuildingsPage";
             Text = "BuildingsPage";
@@ -134,5 +148,6 @@
         private Button visitorButton;
         private Button addBuilding;
         private FlowLayoutPanel showBuildings;
+        private Button delete;
     }
 }

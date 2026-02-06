@@ -8,14 +8,15 @@ using System.Windows.Forms;
 
 namespace Zoorganize.Pages
 {
-    //ersezen durch deine Klasse
-    class Worker
+    // vorher: class Worker
+    public class Worker
     {
         public string Name { get; set; }
         public string Birthday { get; set; }
         public int Wage { get; set; }
         public string Notes { get; set; }
     }
+
     public partial class WorkersPage : Form
     {
         List<Worker> worker = new List<Worker>();
@@ -32,6 +33,34 @@ namespace Zoorganize.Pages
             MainForm.MainPanel.Controls.Clear();
             MainForm.MainPanel.Controls.Add(mainPage);
             mainPage.Show();
+        }
+
+        private void delete_Click(object sender, EventArgs e)
+        {
+            using (DeleteWorkersForm form = new DeleteWorkersForm(worker))
+            {
+                if (form.ShowDialog() == DialogResult.OK)
+                {
+                    foreach (Worker worker in form.workertodelete)
+                    {
+                        this.worker.Remove(worker);
+                    }
+                    workerOverview.Controls.Clear();
+                    foreach (var worker in worker)
+                    {
+                        Button workersButton = new Button
+                        {
+                            Text = worker.Name,
+                            AutoSize = true,
+                            Tag = worker
+                        };
+
+                        workersButton.Click += workersButton_Click;
+
+                        workerOverview.Controls.Add(workersButton);
+                    }
+                }
+            }
         }
 
         private void AddWorker_Click(object sender, EventArgs e)
@@ -122,6 +151,74 @@ namespace Zoorganize.Pages
                 worker = newWorker;
                 DialogResult = DialogResult.OK;
                 this.Close();
+            }
+        }
+
+        public partial class DeleteWorkersForm : Form
+        {
+            internal List<Worker> workertodelete = new List<Worker>();
+            private List<Worker> addedworkers;
+            private FlowLayoutPanel flowWorkers = new FlowLayoutPanel();
+            private Button btnDelete = new Button();
+            private Button btnCancel = new Button();
+
+            public DeleteWorkersForm(List<Worker> worker)
+            {
+                this.addedworkers = worker;
+                flowWorkers.Top = 20;
+                flowWorkers.Left = 20;
+                btnDelete.Top = flowWorkers.Bottom + 20;
+                btnDelete.Left = 20;
+                btnDelete.Text = "Delete";
+                btnCancel.Top = flowWorkers.Bottom + 20;
+                btnCancel.Left = btnDelete.Right + 20;
+                btnCancel.Text = "Cancel";
+                BuildCheckboxList();
+                Controls.Add(flowWorkers);
+                Controls.Add(btnDelete);
+                Controls.Add(btnCancel);
+
+                btnDelete.Click += btnDelete_Click;
+                btnCancel.Click += btnCancel_Click;
+            }
+
+            private void BuildCheckboxList()
+            {
+                flowWorkers.Controls.Clear();
+                flowWorkers.FlowDirection = FlowDirection.TopDown;
+                flowWorkers.WrapContents = false;
+                flowWorkers.AutoScroll = true;
+
+                foreach (var worker in addedworkers)
+                {
+                    CheckBox cb = new CheckBox();
+                    cb.Text = worker.Name;
+                    cb.AutoSize = true;
+                    cb.Tag = worker; // store reference
+
+                    flowWorkers.Controls.Add(cb);
+
+                }
+            }
+
+            private void btnDelete_Click(object sender, EventArgs e)
+            {
+
+                foreach (CheckBox cb in flowWorkers.Controls)
+                {
+                    if (cb.Checked)
+                    {
+                        workertodelete.Add((Worker)cb.Tag);
+                    }
+                }
+
+                DialogResult = DialogResult.OK;
+                Close();
+            }
+
+            private void btnCancel_Click(object sender, EventArgs e)
+            {
+                Close();
             }
         }
     }

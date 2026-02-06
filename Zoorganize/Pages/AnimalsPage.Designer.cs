@@ -1,4 +1,6 @@
-﻿namespace Zoorganize.Pages
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace Zoorganize.Pages
 {
     partial class AnimalsPage
     {
@@ -35,6 +37,7 @@
             animalLabel = new Label();
             typeOverview = new FlowLayoutPanel();
             animalOverview = new FlowLayoutPanel();
+            delete = new Button();
             SuspendLayout();
             // 
             // button1
@@ -47,7 +50,18 @@
             button1.Text = "Zurück";
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
-            // 
+            //
+            //detele Button
+            //
+            delete.Font = new Font("Segoe UI", 12F);
+            delete.Location = new Point(200, 67);
+            delete.Name = "delete";
+            delete.Size = new Size(150, 31);
+            delete.TabIndex = 0;
+            delete.Text = "Löschen";
+            delete.Click += delete_Click;
+
+            //
             // label1
             // 
             label1.AutoSize = true;
@@ -117,6 +131,7 @@
             Controls.Add(animalLabel);
             Controls.Add(speciesLabel);
             Controls.Add(button1);
+            Controls.Add(delete);
             FormBorderStyle = FormBorderStyle.None;
             Name = "AnimalsPage";
             Text = "AnimalsPage";
@@ -133,5 +148,6 @@
         private Label animalLabel;
         private FlowLayoutPanel typeOverview;
         private FlowLayoutPanel animalOverview;
+        private Button delete;
     }
 }

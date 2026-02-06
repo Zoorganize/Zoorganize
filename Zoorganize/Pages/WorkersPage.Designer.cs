@@ -1,4 +1,6 @@
-﻿namespace Zoorganize.Pages
+﻿using System;
+
+namespace Zoorganize.Pages
 {
     partial class WorkersPage
     {
@@ -32,6 +34,7 @@
             label1 = new Label();
             addWorker = new Button();
             workerOverview = new FlowLayoutPanel();
+            delete = new Button();
             SuspendLayout();
             // 
             // button1
@@ -44,6 +47,16 @@
             button1.Text = "Zurück";
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
+            //
+            //detele Button
+            //
+            delete.Font = new Font("Segoe UI", 12F);
+            delete.Location = new Point(230, 58);
+            delete.Name = "delete";
+            delete.Size = new Size(150, 29);
+            delete.TabIndex = 0;
+            delete.Text = "Löschen";
+            delete.Click += delete_Click;
             // 
             // label1
             // 
@@ -57,7 +70,7 @@
             //
             // Panel1
             //
-            workerOverview.Location = new Point(12, 125);
+            workerOverview.Location = new Point(12, 110);
             workerOverview.AutoScroll = true;
             workerOverview.FlowDirection = FlowDirection.TopDown;
             workerOverview.WrapContents = false;
@@ -84,6 +97,7 @@
             Controls.Add(label1);
             Controls.Add(button1);
             Controls.Add(workerOverview);
+            Controls.Add(delete);
             FormBorderStyle = FormBorderStyle.None;
             Name = "WorkersPage";
             Text = "WorkersPage";
@@ -97,5 +111,6 @@
         private Label label1;
         private Button addWorker;
         private FlowLayoutPanel workerOverview;
+        private Button delete;
     }
 }

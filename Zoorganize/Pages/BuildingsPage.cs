@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using static Zoorganize.Pages.WorkersPage;
 
 namespace Zoorganize.Pages
 {
@@ -45,6 +46,22 @@ namespace Zoorganize.Pages
             MainForm.MainPanel.Controls.Add(mainPage);
             mainPage.Show();
 
+        }
+
+        private void delete_Click(object sender, EventArgs e)
+        {
+            using (DeleteBuildingsForm form = new DeleteBuildingsForm(buildings))
+            {
+                if (form.ShowDialog() == DialogResult.OK)
+                {
+                    foreach (Building building in form.buildingtodelete)
+                    {
+                        buildings.Remove(building);
+                    }
+                    showBuildings.Controls.Clear();
+
+                }
+            }
         }
 
         //fügt ein Gebäude hinzu, öffnet die Liste der Gebäude in dem Panel die zu dem erstellten gehören
@@ -220,6 +237,73 @@ namespace Zoorganize.Pages
                 CreatedBuilding = new Building(txtName.Text, type);
 
                 DialogResult = DialogResult.OK;
+                Close();
+            }
+        }
+        public partial class DeleteBuildingsForm : Form
+        {
+            internal List<Building> buildingtodelete = new List<Building>();
+            private List<Building> addedbuilding;
+            private FlowLayoutPanel flowbuilding = new FlowLayoutPanel();
+            private Button btnDelete = new Button();
+            private Button btnCancel = new Button();
+
+            public DeleteBuildingsForm(List<Building> building)
+            {
+                this.addedbuilding = building;
+                flowbuilding.Top = 20;
+                flowbuilding.Left = 20;
+                btnDelete.Top = flowbuilding.Bottom + 20;
+                btnDelete.Left = 20;
+                btnDelete.Text = "Delete";
+                btnCancel.Top = flowbuilding.Bottom + 20;
+                btnCancel.Left = btnDelete.Right + 20;
+                btnCancel.Text = "Cancel";
+                BuildCheckboxList();
+                Controls.Add(flowbuilding);
+                Controls.Add(btnDelete);
+                Controls.Add(btnCancel);
+
+                btnDelete.Click += btnDelete_Click;
+                btnCancel.Click += btnCancel_Click;
+            }
+
+            private void BuildCheckboxList()
+            {
+                flowbuilding.Controls.Clear();
+                flowbuilding.FlowDirection = FlowDirection.TopDown;
+                flowbuilding.WrapContents = false;
+                flowbuilding.AutoScroll = true;
+
+                foreach (var building in addedbuilding)
+                {
+                    CheckBox cb = new CheckBox();
+                    cb.Text = building.Name;
+                    cb.AutoSize = true;
+                    cb.Tag = building; // store reference
+
+                    flowbuilding.Controls.Add(cb);
+
+                }
+            }
+
+            private void btnDelete_Click(object sender, EventArgs e)
+            {
+
+                foreach (CheckBox cb in flowbuilding.Controls)
+                {
+                    if (cb.Checked)
+                    {
+                        buildingtodelete.Add((Building)cb.Tag);
+                    }
+                }
+
+                DialogResult = DialogResult.OK;
+                Close();
+            }
+
+            private void btnCancel_Click(object sender, EventArgs e)
+            {
                 Close();
             }
         }

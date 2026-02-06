@@ -8,18 +8,20 @@ using System.Windows.Forms;
 
 namespace Zoorganize.Pages
 {
-    //Das ersetzen durch deine Klassen
-    class Animal
+    // Das ersetzen durch deine Klassen
+    public class Animal
     {
         public string Name { get; set; }
         public string Species { get; set; }
         public int Age { get; set; }
         public string Habitat { get; set; }
     }
+
     public partial class AnimalsPage : Form
     {
-        //Platzhalter für liste von Animal[] 
-        List<Animal> animals = new List<Animal>();
+        // Platzhalter für liste von Animal[]
+        public List<Animal> animals { get; } = new();
+
         public AnimalsPage()
         {
             InitializeComponent();
@@ -34,6 +36,35 @@ namespace Zoorganize.Pages
             MainForm.MainPanel.Controls.Clear();
             MainForm.MainPanel.Controls.Add(mainPage);
             mainPage.Show();
+        }
+
+        private void delete_Click(object sender, EventArgs e)
+        {
+            using (DeleteAnimalsForm form = new DeleteAnimalsForm(animals))
+            {
+                if (form.ShowDialog() == DialogResult.OK)
+                {
+                    foreach ( Animal animal in form.animaltodelete)
+                    {
+                        animals.Remove(animal);
+                    }
+                    animalOverview.Controls.Clear();
+                    foreach (var animal in animals)
+                    {
+                        if (animal.Species == (sender as Button)?.Tag as string)
+                        {
+                            Button animalButton = new Button
+                            {
+                                Text = animal.Name,
+                                AutoSize = true,
+                                Tag = animal
+                            };
+                            animalButton.Click += AnimalButton_Click;
+                            animalOverview.Controls.Add(animalButton);
+                        }
+                    }
+                }
+            }
         }
 
         //Button der eine neue  Instanz von Animal erstellt und diese in die Liste der Tiere hinzufügt
@@ -162,5 +193,74 @@ namespace Zoorganize.Pages
                 this.Close();
             }
         }
+
+        public partial class DeleteAnimalsForm : Form
+        {
+            private List<Animal> addedanimals;
+            public List<Animal> animaltodelete { get; private set; } = new List<Animal>();
+            private FlowLayoutPanel flowAnimals = new FlowLayoutPanel();
+            private Button btnDelete = new Button();
+            private Button btnCancel = new Button();
+
+            public DeleteAnimalsForm(List<Animal> animals)
+            {
+                this.addedanimals = animals;
+                flowAnimals.Top = 20;
+                flowAnimals.Left = 20;
+                btnDelete.Top = flowAnimals.Bottom + 20;
+                btnDelete.Left = 20;
+                btnDelete.Text = "Delete";
+                btnCancel.Top = flowAnimals.Bottom + 20;
+                btnCancel.Left = btnDelete.Right + 20;
+                btnCancel.Text = "Cancel";
+                BuildCheckboxList();
+                Controls.Add(flowAnimals);
+                Controls.Add(btnDelete);
+                Controls.Add(btnCancel);
+
+                btnDelete.Click += btnDelete_Click;
+                btnCancel.Click += btnCancel_Click;
+            }
+
+            private void BuildCheckboxList()
+            {
+                flowAnimals.Controls.Clear();
+                flowAnimals.FlowDirection = FlowDirection.TopDown;
+                flowAnimals.WrapContents = false;
+                flowAnimals.AutoScroll = true;
+
+                foreach (var animal in addedanimals)
+                {
+                    CheckBox cb = new CheckBox();
+                    cb.Text = animal.Name;
+                    cb.AutoSize = true;
+                    cb.Tag = animal; // store reference
+
+                    flowAnimals.Controls.Add(cb);
+                }
+            }
+
+            private void btnDelete_Click(object sender, EventArgs e)
+            {
+                animaltodelete.Clear();
+
+                foreach (CheckBox cb in flowAnimals.Controls)
+                {
+                    if (cb.Checked)
+                    {
+                        animaltodelete.Add((Animal)cb.Tag);
+                    }
+                }
+
+                DialogResult = DialogResult.OK;
+                Close();
+            }
+
+            private void btnCancel_Click(object sender, EventArgs e)
+            {
+                Close();
+            }
+        }
+
     }
 }
