@@ -50,16 +50,6 @@ namespace Zoorganize.Pages
             button1.Text = "Zurück";
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
-            //
-            //detele Button
-            //
-            delete.Font = new Font("Segoe UI", 12F);
-            delete.Location = new Point(230, 114);
-            delete.Name = "delete";
-            delete.Size = new Size(150, 25);
-            delete.TabIndex = 0;
-            delete.Text = "Löschen";
-            delete.Click += delete_Click;
             // 
             // label1
             // 
@@ -118,12 +108,22 @@ namespace Zoorganize.Pages
             // 
             showBuildings.Location = new Point(14, 140);
             showBuildings.Name = "showBuildings";
+            showBuildings.Size = new Size(500, 600);
             showBuildings.TabIndex = 6;
-            showBuildings.
+            // 
+            // delete
+            // 
+            delete.Font = new Font("Segoe UI", 12F);
+            delete.Location = new Point(230, 114);
+            delete.Name = "delete";
+            delete.Size = new Size(150, 25);
+            delete.TabIndex = 0;
+            delete.Text = "Löschen";
+            delete.Click += delete_Click;
             // 
             // BuildingsPage
             // 
-            ClientSize = new Size(500, 600);
+            ClientSize = new Size(660, 514);
             Controls.Add(showBuildings);
             Controls.Add(addBuilding);
             Controls.Add(visitorButton);

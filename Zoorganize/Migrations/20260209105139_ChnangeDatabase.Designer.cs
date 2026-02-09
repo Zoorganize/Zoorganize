@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Zoorganize.Database;
 
@@ -10,9 +11,11 @@ using Zoorganize.Database;
 namespace Zoorganize.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260209105139_ChnangeDatabase")]
+    partial class ChnangeDatabase
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.2");
@@ -30,6 +33,21 @@ namespace Zoorganize.Migrations
                     b.HasIndex("AnimalEnclosureId");
 
                     b.ToTable("AnimalEnclosureSpecies");
+                });
+
+            modelBuilder.Entity("AnimalStaff", b =>
+                {
+                    b.Property<Guid>("AssignedAnimalsId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("KeepersId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("AssignedAnimalsId", "KeepersId");
+
+                    b.HasIndex("KeepersId");
+
+                    b.ToTable("AnimalStaff");
                 });
 
             modelBuilder.Entity("SpeciesStaff", b =>
@@ -113,9 +131,6 @@ namespace Zoorganize.Migrations
                     b.Property<bool>("IsPregnant")
                         .HasColumnType("INTEGER");
 
-                    b.Property<Guid?>("KeeperId")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -141,8 +156,6 @@ namespace Zoorganize.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CurrentEnclosureId");
-
-                    b.HasIndex("KeeperId");
 
                     b.HasIndex("SpeciesId");
 
@@ -438,6 +451,21 @@ namespace Zoorganize.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AnimalStaff", b =>
+                {
+                    b.HasOne("Zoorganize.Database.Models.Animal", null)
+                        .WithMany()
+                        .HasForeignKey("AssignedAnimalsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Zoorganize.Database.Models.Staff", null)
+                        .WithMany()
+                        .HasForeignKey("KeepersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("SpeciesStaff", b =>
                 {
                     b.HasOne("Zoorganize.Database.Models.Species", null)
@@ -490,11 +518,6 @@ namespace Zoorganize.Migrations
                         .HasForeignKey("CurrentEnclosureId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Zoorganize.Database.Models.Staff", "Keeper")
-                        .WithMany("AssignedAnimals")
-                        .HasForeignKey("KeeperId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("Zoorganize.Database.Models.Species", "Species")
                         .WithMany()
                         .HasForeignKey("SpeciesId")
@@ -502,8 +525,6 @@ namespace Zoorganize.Migrations
                         .IsRequired();
 
                     b.Navigation("CurrentEnclosure");
-
-                    b.Navigation("Keeper");
 
                     b.Navigation("Species");
                 });
@@ -562,11 +583,6 @@ namespace Zoorganize.Migrations
                     b.Navigation("ExternalZooStays");
 
                     b.Navigation("VeterinaryAppointments");
-                });
-
-            modelBuilder.Entity("Zoorganize.Database.Models.Staff", b =>
-                {
-                    b.Navigation("AssignedAnimals");
                 });
 
             modelBuilder.Entity("Zoorganize.Database.Models.AnimalEnclosure", b =>
