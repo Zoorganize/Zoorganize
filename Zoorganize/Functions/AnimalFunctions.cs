@@ -26,7 +26,7 @@ namespace Zoorganize.Functions
         //Funktionen, die ich für die Erstellung der Oberfläche hinsichtlich der Tiere brauche, z.B. Anzeige von Informationen, etc.
         //alle Tierarten (bestimmte Sortierung?)
         public async Task<List<Species>> GetSpecies() 
-        {
+        { 
             return await inContext.Species.OrderBy(s => s.CommonName).ToListAsync();
         }
 

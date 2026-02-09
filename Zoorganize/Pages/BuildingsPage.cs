@@ -273,21 +273,21 @@ namespace Zoorganize.Pages
                     yPos += 35;
 
                     // Location
-                    Label lblLocation = new Label { Text = "Standort:", Left = leftLabel, Top = yPos, Width = 120 };
+                    Label lblLocation = new Label { Text = "Standort*:", Left = leftLabel, Top = yPos, Width = 120 };
                     txtLocation = new TextBox { Left = leftControl, Top = yPos, Width = controlWidth };
                     Controls.Add(lblLocation);
                     Controls.Add(txtLocation);
                     yPos += 35;
 
                     // Description
-                    Label lblDescription = new Label { Text = "Beschreibung:", Left = leftLabel, Top = yPos, Width = 120 };
+                    Label lblDescription = new Label { Text = "Beschreibung*:", Left = leftLabel, Top = yPos, Width = 120 };
                     txtDescription = new TextBox { Left = leftControl, Top = yPos, Width = controlWidth, Height = 60, Multiline = true };
                     Controls.Add(lblDescription);
                     Controls.Add(txtDescription);
                     yPos += 70;
 
                     // Area
-                    Label lblArea = new Label { Text = "Fläche (m²):", Left = leftLabel, Top = yPos, Width = 120 };
+                    Label lblArea = new Label { Text = "Fläche (m²)*:", Left = leftLabel, Top = yPos, Width = 120 };
                     txtArea = new TextBox { Left = leftControl, Top = yPos, Width = 100 };
                     Controls.Add(lblArea);
                     Controls.Add(txtArea);
@@ -326,17 +326,17 @@ namespace Zoorganize.Pages
 
                     int panelY = 10;
 
-                    Label lblMaxCapacity = new Label { Text = "Max. Kapazität:", Left = 20, Top = panelY, Width = 120 };
+                    Label lblMaxCapacity = new Label { Text = "Max. Kapazität*:", Left = 20, Top = panelY, Width = 120 };
                     numMaxCapacity = new NumericUpDown { Left = 150, Top = panelY, Width = 100, Minimum = 1, Maximum = 1000, Value = 10 };
                     pnlEnclosureDetails.Controls.Add(lblMaxCapacity);
                     pnlEnclosureDetails.Controls.Add(numMaxCapacity);
                     panelY += 35;
 
-                    chkIsOutdoor = new CheckBox { Text = "Außengehege", Left = 20, Top = panelY, AutoSize = true };
+                    chkIsOutdoor = new CheckBox { Text = "Außengehege*", Left = 20, Top = panelY, AutoSize = true };
                     pnlEnclosureDetails.Controls.Add(chkIsOutdoor);
                     panelY += 30;
 
-                    Label lblSecurity = new Label { Text = "Sicherheitsstufe:", Left = 20, Top = panelY, Width = 120 };
+                    Label lblSecurity = new Label { Text = "Sicherheitsstufe*:", Left = 20, Top = panelY, Width = 120 };
                     cmbSecurityLevel = new ComboBox { Left = 150, Top = panelY, Width = 200, DropDownStyle = ComboBoxStyle.DropDownList };
                     cmbSecurityLevel.Items.AddRange(Enum.GetNames(typeof(SecurityLevel)));
                     cmbSecurityLevel.SelectedIndex = 0;

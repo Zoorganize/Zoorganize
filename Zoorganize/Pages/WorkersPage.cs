@@ -152,7 +152,7 @@ namespace Zoorganize.Pages
             {
                 this.availableSpecies = species;
 
-                Text = "Arbeiter Hinzufügen";
+                Text = "Arbeiter hinzufügen";
                 Width = 350;
                 Height = 750;
                 AutoScroll = true;
@@ -207,7 +207,7 @@ namespace Zoorganize.Pages
                 top += spacing;
 
                 // Jahresgehalt
-                Label lblSalary = new Label { Text = "Jahresgehalt:", Left = left, Top = top, Width = 100 };
+                Label lblSalary = new Label { Text = "Jahresgehalt*:", Left = left, Top = top, Width = 100 };
                 yearlySalary.Left = left + 110;
                 yearlySalary.Top = top;
                 yearlySalary.Width = 200;
@@ -216,7 +216,7 @@ namespace Zoorganize.Pages
                 top += spacing;
 
                 // Kontaktinfo
-                Label lblContact = new Label { Text = "Kontakt:", Left = left, Top = top, Width = 100 };
+                Label lblContact = new Label { Text = "Kontakt*:", Left = left, Top = top, Width = 100 };
                 contactInfo.Left = left + 110;
                 contactInfo.Top = top;
                 contactInfo.Width = 200;
@@ -225,7 +225,7 @@ namespace Zoorganize.Pages
                 top += spacing;
 
                 // Adresse
-                Label lblAddress = new Label { Text = "Adresse:", Left = left, Top = top, Width = 100 };
+                Label lblAddress = new Label { Text = "Adresse*:", Left = left, Top = top, Width = 100 };
                 address.Left = left + 110;
                 address.Top = top;
                 address.Width = 200;
@@ -234,7 +234,7 @@ namespace Zoorganize.Pages
                 top += spacing;
 
                 // Einstellungsdatum
-                Label lblHireDate = new Label { Text = "Einstellung:", Left = left, Top = top, Width = 100 };
+                Label lblHireDate = new Label { Text = "Einstellung*:", Left = left, Top = top, Width = 100 };
                 hireDate.Left = left + 110;
                 hireDate.Top = top;
                 hireDate.Width = 200;
@@ -244,7 +244,7 @@ namespace Zoorganize.Pages
                 top += spacing;
 
                 // Austrittsdatum hinzugefügt
-                hasExitDate.Text = "Austrittsdatum festlegen";
+                hasExitDate.Text = "Austrittsdatum festlegen*";
                 hasExitDate.Left = left;
                 hasExitDate.Top = top;
                 hasExitDate.Width = 200;
@@ -252,7 +252,7 @@ namespace Zoorganize.Pages
                 Controls.Add(hasExitDate);
                 top += 25;
 
-                lblExitDate.Text = "Austritt:";
+                lblExitDate.Text = "Austritt*:";
                 lblExitDate.Left = left;
                 lblExitDate.Top = top;
                 lblExitDate.Width = 100;
@@ -269,7 +269,7 @@ namespace Zoorganize.Pages
                 top += spacing;
 
                 // Autorisierte Tierarten
-                Label lblSpecies = new Label { Text = "Autorisierte Tierarten:", Left = left, Top = top, Width = 300 };
+                Label lblSpecies = new Label { Text = "Autorisierte Tierarten*:", Left = left, Top = top, Width = 300 };
                 Controls.Add(lblSpecies);
                 top += 25;
 
@@ -290,7 +290,7 @@ namespace Zoorganize.Pages
                 top += 130;
 
                 // Notizen
-                Label lblNotes = new Label { Text = "Notizen:", Left = left, Top = top, Width = 100 };
+                Label lblNotes = new Label { Text = "Notizen*:", Left = left, Top = top, Width = 100 };
                 notes.Left = left + 110;
                 notes.Top = top;
                 notes.Width = 200;

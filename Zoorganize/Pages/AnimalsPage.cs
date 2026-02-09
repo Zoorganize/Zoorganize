@@ -348,14 +348,14 @@ namespace Zoorganize.Pages
                 Controls.Add(speciesCombo);
                 top += spacing;
 
-                AddLabel("Alter:", leftLabel, top);
+                AddLabel("Alter*:", leftLabel, top);
                 age.Left = leftControl;
                 age.Top = top;
                 age.Width = controlWidth;
                 Controls.Add(age);
                 top += spacing;
 
-                AddLabel("Ankunftsdatum:", leftLabel, top);
+                AddLabel("Ankunftsdatum*:", leftLabel, top);
                 arrivalDate.Left = leftControl;
                 arrivalDate.Top = top;
                 arrivalDate.Width = controlWidth;
@@ -363,7 +363,7 @@ namespace Zoorganize.Pages
                 Controls.Add(arrivalDate);
                 top += spacing;
 
-                AddLabel("Notizen:", leftLabel, top);
+                AddLabel("Notizen*:", leftLabel, top);
                 note.Left = leftControl;
                 note.Top = top;
                 note.Width = controlWidth;
@@ -398,14 +398,14 @@ namespace Zoorganize.Pages
                 Controls.Add(sex);
                 top += spacing;
 
-                isNeutered.Text = "Kastriert/Sterilisiert";
+                isNeutered.Text = "Kastriert/Sterilisiert*";
                 isNeutered.Left = leftControl;
                 isNeutered.Top = top;
                 isNeutered.Width = controlWidth;
                 Controls.Add(isNeutered);
                 top += spacing;
 
-                isPregnant.Text = "Trächtig/Schwanger";
+                isPregnant.Text = "Trächtig/Schwanger*";
                 isPregnant.Left = leftControl;
                 isPregnant.Top = top;
                 isPregnant.Width = controlWidth;
@@ -418,7 +418,7 @@ namespace Zoorganize.Pages
                 top += spacing;
 
                 // Gehege-Auswahl
-                AddLabel("Gehege:", leftLabel, top);
+                AddLabel("Gehege*:", leftLabel, top);
                 enclosureCombo.Left = leftControl;
                 enclosureCombo.Top = top;
                 enclosureCombo.Width = controlWidth;
@@ -428,7 +428,7 @@ namespace Zoorganize.Pages
                 top += spacing;
 
                 // Pfleger-Auswahl => Problem, nicht alle Keeper können diese Species auch betreuen, aber das weiß ich erst, wenn ich die Tierart ausgewählt habe, also muss ich die Liste der Pfleger aktualisieren, wenn eine Tierart ausgewählt wird
-                AddLabel("Pfleger:", leftLabel, top);
+                AddLabel("Pfleger*:", leftLabel, top);
                 currentKeeper.Left = leftControl;
                 currentKeeper.Top = top;
                 currentKeeper.Width = controlWidth;
@@ -443,7 +443,7 @@ namespace Zoorganize.Pages
                 AddLabel("--- GESUNDHEIT ---", leftLabel, top);
                 top += spacing;
 
-                AddLabel("Gesundheitsstatus:", leftLabel, top);
+                AddLabel("Gesundheitsstatus*:", leftLabel, top);
                 healthStatus.Left = leftControl;
                 healthStatus.Top = top;
                 healthStatus.Width = controlWidth;
@@ -454,14 +454,14 @@ namespace Zoorganize.Pages
                 Controls.Add(healthStatus);
                 top += spacing;
 
-                AddLabel("Gewicht (kg):", leftLabel, top);
+                AddLabel("Gewicht (kg)*:", leftLabel, top);
                 weightKg.Left = leftControl;
                 weightKg.Top = top;
                 weightKg.Width = controlWidth;
                 Controls.Add(weightKg);
                 top += spacing;
 
-                inQuarantine.Text = "In Quarantäne";
+                inQuarantine.Text = "In Quarantäne*";
                 inQuarantine.Left = leftControl;
                 inQuarantine.Top = top;
                 inQuarantine.Width = controlWidth;
@@ -473,21 +473,21 @@ namespace Zoorganize.Pages
                 AddLabel("--- VERHALTEN ---", leftLabel, top);
                 top += spacing;
 
-                aggressive.Text = "Aggressiv";
+                aggressive.Text = "Aggressiv*";
                 aggressive.Left = leftControl;
                 aggressive.Top = top;
                 aggressive.Width = controlWidth;
                 Controls.Add(aggressive);
                 top += spacing;
 
-                requiresSeparation.Text = "Benötigt Trennung";
+                requiresSeparation.Text = "Benötigt Trennung*";
                 requiresSeparation.Left = leftControl;
                 requiresSeparation.Top = top;
                 requiresSeparation.Width = controlWidth;
                 Controls.Add(requiresSeparation);
                 top += spacing;
 
-                AddLabel("Verhaltensnotizen:", leftLabel, top);
+                AddLabel("Verhaltensnotizen*:", leftLabel, top);
                 behavioralNotes.Left = leftControl;
                 behavioralNotes.Top = top;
                 behavioralNotes.Width = controlWidth;
@@ -786,7 +786,7 @@ namespace Zoorganize.Pages
                 Controls.Add(commonName);
                 top += spacing;
 
-                AddLabel("Wissenschaftlicher Name:", leftLabel, top);
+                AddLabel("Wissenschaftlicher Name*:", leftLabel, top);
                 scientificName.Left = leftControl;
                 scientificName.Top = top;
                 scientificName.Width = controlWidth;
@@ -798,7 +798,7 @@ namespace Zoorganize.Pages
                 AddLabel("--- HALTUNG ---", leftLabel, top);
                 top += spacing;
 
-                isSolitaryByNature.Text = "Einzelgänger";
+                isSolitaryByNature.Text = "Einzelgänger*";
                 isSolitaryByNature.Left = leftControl;
                 isSolitaryByNature.Top = top;
                 isSolitaryByNature.Width = controlWidth;
@@ -810,35 +810,35 @@ namespace Zoorganize.Pages
                 AddLabel("--- KLIMA ---", leftLabel, top);
                 top += spacing;
 
-                AddLabel("Min. Temperatur (°C):", leftLabel, top);
+                AddLabel("Min. Temperatur (°C)*:", leftLabel, top);
                 minTemperature.Left = leftControl;
                 minTemperature.Top = top;
                 minTemperature.Width = controlWidth;
                 Controls.Add(minTemperature);
                 top += spacing;
 
-                AddLabel("Max. Temperatur (°C):", leftLabel, top);
+                AddLabel("Max. Temperatur (°C)*:", leftLabel, top);
                 maxTemperature.Left = leftControl;
                 maxTemperature.Top = top;
                 maxTemperature.Width = controlWidth;
                 Controls.Add(maxTemperature);
                 top += spacing;
 
-                AddLabel("Min. Luftfeuchtigkeit (%):", leftLabel, top);
+                AddLabel("Min. Luftfeuchtigkeit (%)*:", leftLabel, top);
                 minHumidity.Left = leftControl;
                 minHumidity.Top = top;
                 minHumidity.Width = controlWidth;
                 Controls.Add(minHumidity);
                 top += spacing;
 
-                AddLabel("Max. Luftfeuchtigkeit (%):", leftLabel, top);
+                AddLabel("Max. Luftfeuchtigkeit (%)*:", leftLabel, top);
                 maxHumidity.Left = leftControl;
                 maxHumidity.Top = top;
                 maxHumidity.Width = controlWidth;
                 Controls.Add(maxHumidity);
                 top += spacing;
 
-                requiresOutdoorAccess.Text = "Benötigt Außenzugang";
+                requiresOutdoorAccess.Text = "Benötigt Außenzugang*";
                 requiresOutdoorAccess.Left = leftControl;
                 requiresOutdoorAccess.Top = top;
                 requiresOutdoorAccess.Width = controlWidth;
@@ -850,7 +850,7 @@ namespace Zoorganize.Pages
                 AddLabel("--- SICHERHEIT ---", leftLabel, top);
                 top += spacing;
 
-                AddLabel("Sicherheitsstufe:", leftLabel, top);
+                AddLabel("Sicherheitsstufe*:", leftLabel, top);
                 requiredSecurityLevel.Left = leftControl;
                 requiredSecurityLevel.Top = top;
                 requiredSecurityLevel.Width = controlWidth;
@@ -860,14 +860,14 @@ namespace Zoorganize.Pages
                 Controls.Add(requiredSecurityLevel);
                 top += spacing;
 
-                isDangerous.Text = "Gefährlich";
+                isDangerous.Text = "Gefährlich*";
                 isDangerous.Left = leftControl;
                 isDangerous.Top = top;
                 isDangerous.Width = controlWidth;
                 Controls.Add(isDangerous);
                 top += spacing;
 
-                requiresSpecialPermit.Text = "Benötigt Spezialgenehmigung";
+                requiresSpecialPermit.Text = "Benötigt Spezialgenehmigung*";
                 requiresSpecialPermit.Left = leftControl;
                 requiresSpecialPermit.Top = top;
                 requiresSpecialPermit.Width = controlWidth;
@@ -879,21 +879,21 @@ namespace Zoorganize.Pages
                 AddLabel("--- INFRASTRUKTUR ---", leftLabel, top);
                 top += spacing;
 
-                requiresWaterFeature.Text = "Benötigt Wasserstelle";
+                requiresWaterFeature.Text = "Benötigt Wasserstelle*";
                 requiresWaterFeature.Left = leftControl;
                 requiresWaterFeature.Top = top;
                 requiresWaterFeature.Width = controlWidth;
                 Controls.Add(requiresWaterFeature);
                 top += spacing;
 
-                requiresClimbingStructures.Text = "Benötigt Kletter-Strukturen";
+                requiresClimbingStructures.Text = "Benötigt Kletter-Strukturen*";
                 requiresClimbingStructures.Left = leftControl;
                 requiresClimbingStructures.Top = top;
                 requiresClimbingStructures.Width = controlWidth;
                 Controls.Add(requiresClimbingStructures);
                 top += spacing;
 
-                requiresShelter.Text = "Benötigt Unterschlupf";
+                requiresShelter.Text = "Benötigt Unterschlupf*";
                 requiresShelter.Left = leftControl;
                 requiresShelter.Top = top;
                 requiresShelter.Width = controlWidth;
