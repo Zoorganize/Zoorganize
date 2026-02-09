@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Text;
 using Zoorganize.Database.Models;
 using Zoorganize.Functions;
 using Zoorganize.Models.Api;
@@ -20,16 +21,6 @@ namespace Zoorganize.Pages
             this.staffFunctions = staffFunctions;
             InitializeComponent();
 
-            //Das muss dann weg und anpassen
-            Button addSpeciesButton = new Button
-            {
-                Text = "Tierart hinzufügen",
-                Left = 20,
-                Top = 50, // Passe die Position an
-                Width = 150,
-                Height = 30
-            };
-            addSpeciesButton.Click += AddSpecies_Click;
             Controls.Add(addSpeciesButton);
 
             LoadAnimals();
@@ -223,87 +214,298 @@ namespace Zoorganize.Pages
         {
             if ((sender as Button)?.Tag is Animal animal)
             {
-                string details = $"Name: {animal.Name}\n" +
-                    $"Tierart: {animal.Species?.CommonName ?? "Unbekannt"}\n" +
-                    $"Wissenschaftlicher Name: {animal.Species?.ScientificName ?? "N/A"}\n" +
-                    $"Alter: {animal.Age?.ToString() ?? "Unbekannt"}\n" +
-                    $"Ankunftsdatum: {animal.ArrivalDate:dd.MM.yyyy}\n" +
-                    $"Herkunft: {animal.Origin}\n" +
-                    $"Geschlecht: {animal.Sex}\n" +
-                    $"Kastriert: {(animal.IsNeutered ? "Ja" : "Nein")}\n";
+                using var detailsForm = new AnimalDetailsForm(animal);
+                detailsForm.Height = 350;
+                detailsForm.ShowDialog(this); // modal window
+            }
+        }
 
-                //Trächtig nur bei weiblichen Tieren anzeigen
-                if (animal.Sex == Sex.female)
+        public partial class AnimalDetailsForm : Form
+        {
+            private readonly Animal _animal;
+            public TextBox txtDetails = new TextBox();
+            
+
+
+            public AnimalDetailsForm(Animal animal)
+            {
+                _animal = animal;
+                Button vetAppointment = new Button();
+                Button lendAnimal = new Button();
+                vetAppointment.Text = "Tierarzt Besuch hinzufügen";
+                vetAppointment.Click += vetAppointment_Click;
+                vetAppointment.Width = 250;
+                vetAppointment.Top = 260;
+                vetAppointment.Left = 20;
+
+                lendAnimal.Text = "Tier ausleihen";
+                lendAnimal.Click += LendAnimal_Click;
+                lendAnimal.Width = 250;
+                lendAnimal.Top = 280;
+                lendAnimal.Left = 20;
+
+
+                txtDetails.Multiline = true;
+                txtDetails.ReadOnly = true;
+                txtDetails.ScrollBars = ScrollBars.Vertical;
+                txtDetails.Dock = DockStyle.Top;
+                txtDetails.Height = 250;
+
+                Controls.Add(txtDetails);
+                Controls.Add(vetAppointment);
+                Controls.Add(lendAnimal);
+                LoadAnimalDetails();
+            }
+
+            private void LoadAnimalDetails()
+            {
+                var sb = new StringBuilder();
+
+                sb.AppendLine($"Name: {_animal.Name}");
+                sb.AppendLine($"Tierart: {_animal.Species?.CommonName ?? "Unbekannt"}");
+                sb.AppendLine($"Wissenschaftlicher Name: {_animal.Species?.ScientificName ?? "N/A"}");
+                sb.AppendLine($"Alter: {_animal.Age?.ToString() ?? "Unbekannt"}");
+                sb.AppendLine($"Ankunftsdatum: {_animal.ArrivalDate:dd.MM.yyyy}");
+                sb.AppendLine($"Herkunft: {_animal.Origin}");
+                sb.AppendLine($"Geschlecht: {_animal.Sex}");
+                sb.AppendLine($"Kastriert: {(_animal.IsNeutered ? "Ja" : "Nein")}");
+
+                if (_animal.Sex == Sex.female)
+                    sb.AppendLine($"Trächtig: {(_animal.IsPregnant ? "Ja" : "Nein")}");
+
+                sb.AppendLine($"Gesundheitsstatus: {_animal.HealthStatus}");
+
+                if (_animal.WeightKg.HasValue)
+                    sb.AppendLine($"Gewicht: {_animal.WeightKg:F2} kg");
+
+                sb.AppendLine($"In Quarantäne: {(_animal.InQuarantine ? "Ja" : "Nein")}");
+                sb.AppendLine($"Aggressiv: {(_animal.Aggressive ? "Ja" : "Nein")}");
+                sb.AppendLine($"Benötigt Trennung: {(_animal.RequiresSeparation ? "Ja" : "Nein")}");
+                sb.AppendLine($"Gehege: {_animal.CurrentEnclosure?.Name ?? "Kein Gehege zugewiesen"}");
+                sb.AppendLine($"Pfleger: {_animal.Keeper?.Name ?? "Unbekannt"}");
+
+                if (!string.IsNullOrWhiteSpace(_animal.Note))
+                    sb.AppendLine($"\nNotizen: {_animal.Note}");
+
+                if (!string.IsNullOrWhiteSpace(_animal.BehavioralNotes))
+                    sb.AppendLine($"\nVerhaltensnotizen: {_animal.BehavioralNotes}");
+
+                txtDetails.Text = sb.ToString();
+                Text = $"Details: {_animal.Name}";
+            }
+
+            private void vetAppointment_Click(object sender, EventArgs e)
+            {
+                using var form = new InputAppointment();
+
+                if (form.ShowDialog(this) == DialogResult.OK)
                 {
-                    details += $"Trächtig: {(animal.IsPregnant ? "Ja" : "Nein")}\n";
+                    string appointmentName = form.AppointmentName;
+                    DateTime appointmentDate = form.AppointmentDate;
+                    string notes = form.Notes;
+
+                    // TODO: save appointment to animal / database
+                    MessageBox.Show(
+                        $"Termin gespeichert:\n{appointmentName}\n{appointmentDate:dd.MM.yyyy}",
+                        "Erfolg",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                    );
                 }
+            }
 
-                details += $"Gesundheitsstatus: {animal.HealthStatus}\n";
+            private void LendAnimal_Click(object sender, EventArgs e)
+            {
+                using var form = new LendAnimal();
 
-                //Gewicht nur wenn vorhanden
-                if (animal.WeightKg.HasValue)
+                if (form.ShowDialog(this) == DialogResult.OK)
                 {
-                    details += $"Gewicht: {animal.WeightKg:F2} kg\n";
+                    string zooName = form.ZooName;
+                    DateTime startDate = form.StartDate;
+                    DateTime endDate = form.EndDate;
+                    string notes = form.Notes;
+
+                    // Basic validation
+                    if (endDate < startDate)
+                    {
+                        MessageBox.Show(
+                            "Enddatum darf nicht vor dem Startdatum liegen.",
+                            "Fehler",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error
+                        );
+                        return;
+                    }
+
+                    // TODO: process lending logic
+                    MessageBox.Show(
+                        $"Tier ausgeliehen an {zooName}\n" +
+                        $"Von {startDate:dd.MM.yyyy} bis {endDate:dd.MM.yyyy}",
+                        "Erfolg",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                    );
                 }
+            }
 
-                details += $"In Quarantäne: {(animal.InQuarantine ? "Ja" : "Nein")}\n" +
-                    $"Aggressiv: {(animal.Aggressive ? "Ja" : "Nein")}\n" +
-                    $"Benötigt Trennung: {(animal.RequiresSeparation ? "Ja" : "Nein")}\n" +
-                    $"Gehege: {animal.CurrentEnclosure?.Name ?? "Kein Gehege zugewiesen"}\n";
+        }
 
-                //Pfleger anzeigen(wie bei Mitarbeitern -> Tierarten)
-                details += $"Pfleger: {animal.Keeper?.Name ?? "Unbekannt"}\n";
-                
+        public class InputAppointment : Form
+        {
+            private TextBox txtName;
+            private DateTimePicker dtpDate;
+            private TextBox txtNotes;
 
-                //Notizen am Ende
-                if (!string.IsNullOrWhiteSpace(animal.Note))
+            public string AppointmentName => txtName.Text;
+            public DateTime AppointmentDate => dtpDate.Value;
+            public string Notes => txtNotes.Text;
+
+            public InputAppointment()
+            {
+                Text = "Veterinärtermin hinzufügen";
+                Width = 400;
+                Height = 300;
+                StartPosition = FormStartPosition.CenterParent;
+                FormBorderStyle = FormBorderStyle.FixedDialog;
+                MaximizeBox = false;
+                MinimizeBox = false;
+
+                Label lblName = new Label { Text = "Terminname:", Left = 10, Top = 15, Width = 120 };
+                txtName = new TextBox { Left = 140, Top = 12, Width = 220 };
+
+                Label lblDate = new Label { Text = "Datum:", Left = 10, Top = 50, Width = 120 };
+                dtpDate = new DateTimePicker
                 {
-                    details += $"Notizen: {animal.Note}\n";
-                }
+                    Left = 140,
+                    Top = 47,
+                    Width = 220,
+                    Format = DateTimePickerFormat.Short
+                };
 
-                if (!string.IsNullOrWhiteSpace(animal.BehavioralNotes))
+                Label lblNotes = new Label { Text = "Notizen:", Left = 10, Top = 85, Width = 120 };
+                txtNotes = new TextBox
                 {
-                    details += $"Verhaltensnotizen: {animal.BehavioralNotes}\n";
-                }
+                    Left = 140,
+                    Top = 82,
+                    Width = 220,
+                    Height = 80,
+                    Multiline = true,
+                    ScrollBars = ScrollBars.Vertical
+                };
 
-                MessageBox.Show(details, $"Details: {animal.Name}", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Button btnOk = new Button { Text = "OK", Left = 200, Top = 180, DialogResult = DialogResult.OK };
+                Button btnCancel = new Button { Text = "Abbrechen", Left = 280, Top = 180, DialogResult = DialogResult.Cancel };
+
+                AcceptButton = btnOk;
+                CancelButton = btnCancel;
+
+                Controls.AddRange(new Control[]
+                {
+            lblName, txtName,
+            lblDate, dtpDate,
+            lblNotes, txtNotes,
+            btnOk, btnCancel
+                });
             }
         }
 
 
-        //Das ist das Formular, welches geöffnet wird, hier müssen die Informationen über das Tier eingegeben werden, damit es zur Liste der Tiere hinzugefügt werden kann
-        //Input ist noch nicht Optional
+        public class LendAnimal : Form
+        {
+            private TextBox txtZooName;
+            private DateTimePicker dtpStart;
+            private DateTimePicker dtpEnd;
+            private TextBox txtNotes;
+
+            public string ZooName => txtZooName.Text;
+            public DateTime StartDate => dtpStart.Value;
+            public DateTime EndDate => dtpEnd.Value;
+            public string Notes => txtNotes.Text;
+
+            public LendAnimal()
+            {
+                Text = "Tier ausleihen / abgeben";
+                Width = 400;
+                Height = 330;
+                StartPosition = FormStartPosition.CenterParent;
+                FormBorderStyle = FormBorderStyle.FixedDialog;
+                MaximizeBox = false;
+                MinimizeBox = false;
+
+                Label lblZoo = new Label { Text = "Zoo-Name:", Left = 10, Top = 15, Width = 120 };
+                txtZooName = new TextBox { Left = 140, Top = 12, Width = 220 };
+
+                Label lblStart = new Label { Text = "Startdatum:", Left = 10, Top = 50, Width = 120 };
+                dtpStart = new DateTimePicker
+                {
+                    Left = 140,
+                    Top = 47,
+                    Width = 220,
+                    Format = DateTimePickerFormat.Short
+                };
+
+                Label lblEnd = new Label { Text = "Enddatum:", Left = 10, Top = 85, Width = 120 };
+                dtpEnd = new DateTimePicker
+                {
+                    Left = 140,
+                    Top = 82,
+                    Width = 220,
+                    Format = DateTimePickerFormat.Short
+                };
+
+                Label lblNotes = new Label { Text = "Notizen:", Left = 10, Top = 120, Width = 120 };
+                txtNotes = new TextBox
+                {
+                    Left = 140,
+                    Top = 117,
+                    Width = 220,
+                    Height = 90,
+                    Multiline = true,
+                    ScrollBars = ScrollBars.Vertical
+                };
+
+                Button btnOk = new Button { Text = "OK", Left = 200, Top = 230, DialogResult = DialogResult.OK };
+                Button btnCancel = new Button { Text = "Abbrechen", Left = 280, Top = 230, DialogResult = DialogResult.Cancel };
+
+                AcceptButton = btnOk;
+                CancelButton = btnCancel;
+
+                Controls.AddRange(new Control[]
+                {
+            lblZoo, txtZooName,
+            lblStart, dtpStart,
+            lblEnd, dtpEnd,
+            lblNotes, txtNotes,
+            btnOk, btnCancel
+                });
+            }
+        }
+
         class AnimalForm : Form
         {
             private readonly AnimalFunctions _animalFunctions;
             private readonly RoomFunctions _roomFunctions;
             private readonly StaffFunctions _staffFunctions;
 
-            // Basis-Informationen
             TextBox name = new TextBox();
             ComboBox speciesCombo = new ComboBox();
             TextBox age = new TextBox();
             TextBox note = new TextBox();
             DateTimePicker arrivalDate = new DateTimePicker();
 
-            // Herkunft & Geschlecht
             ComboBox origin = new ComboBox();
             ComboBox sex = new ComboBox();
             CheckBox isNeutered = new CheckBox();
             CheckBox isPregnant = new CheckBox();
 
-            //Gehege-Auswahl hinzugefügt
             ComboBox enclosureCombo = new ComboBox();
 
-            //Pfleger-Auswahl
             ComboBox currentKeeper = new();
 
-            // Gesundheit
             ComboBox healthStatus = new ComboBox();
             TextBox weightKg = new TextBox();
             CheckBox inQuarantine = new CheckBox();
 
-            // Verhalten
             CheckBox aggressive = new CheckBox();
             CheckBox requiresSeparation = new CheckBox();
             TextBox behavioralNotes = new TextBox();
@@ -331,7 +533,6 @@ namespace Zoorganize.Pages
                 int spacing = 40;
                 int controlWidth = 250;
 
-                // === BASIS-INFORMATIONEN ===
                 AddLabel("Name:", leftLabel, top);
                 name.Left = leftControl;
                 name.Top = top;
@@ -372,7 +573,6 @@ namespace Zoorganize.Pages
                 Controls.Add(note);
                 top += 70;
 
-                // === HERKUNFT & GESCHLECHT ===
                 top += 10;
                 AddLabel("--- HERKUNFT & GESCHLECHT ---", leftLabel, top);
                 top += spacing;
@@ -412,12 +612,10 @@ namespace Zoorganize.Pages
                 Controls.Add(isPregnant);
                 top += spacing;
 
-                // === HALTUNG ===
                 top += 10;
                 AddLabel("--- HALTUNG ---", leftLabel, top);
                 top += spacing;
 
-                // Gehege-Auswahl
                 AddLabel("Gehege*:", leftLabel, top);
                 enclosureCombo.Left = leftControl;
                 enclosureCombo.Top = top;
@@ -427,18 +625,17 @@ namespace Zoorganize.Pages
                 Controls.Add(enclosureCombo);
                 top += spacing;
 
-                // Pfleger-Auswahl => Problem, nicht alle Keeper können diese Species auch betreuen, aber das weiß ich erst, wenn ich die Tierart ausgewählt habe, also muss ich die Liste der Pfleger aktualisieren, wenn eine Tierart ausgewählt wird
+                
                 AddLabel("Pfleger*:", leftLabel, top);
                 currentKeeper.Left = leftControl;
                 currentKeeper.Top = top;
                 currentKeeper.Width = controlWidth;
                 currentKeeper.DropDownStyle = ComboBoxStyle.DropDownList;
                 currentKeeper.Items.Add("(Kein Pfleger)");
-                currentKeeper.Enabled = false; // ÄNDERUNG: Initial deaktiviert bis Tierart gewählt
+                currentKeeper.Enabled = false;
                 Controls.Add(currentKeeper);
                 top += spacing;
 
-                // === GESUNDHEIT ===
                 top += 10;
                 AddLabel("--- GESUNDHEIT ---", leftLabel, top);
                 top += spacing;
@@ -468,7 +665,6 @@ namespace Zoorganize.Pages
                 Controls.Add(inQuarantine);
                 top += spacing;
 
-                // === VERHALTEN ===
                 top += 10;
                 AddLabel("--- VERHALTEN ---", leftLabel, top);
                 top += spacing;
@@ -496,7 +692,6 @@ namespace Zoorganize.Pages
                 Controls.Add(behavioralNotes);
                 top += 70;
 
-                // === SUBMIT BUTTON ===
                 top += 20;
                 submit.Text = "Tier hinzufügen";
                 submit.Left = leftLabel;
@@ -531,7 +726,6 @@ namespace Zoorganize.Pages
                 {
                     var enclosures = await _roomFunctions.GetAnimalEnclosures(); 
 
-                    // Füge Gehege zur ComboBox hinzu (nach "(Kein Gehege)")
                     foreach (var enclosure in enclosures.OrderBy(e => e.Name))
                     {
                         enclosureCombo.Items.Add(enclosure);
@@ -560,7 +754,7 @@ namespace Zoorganize.Pages
 
                     currentKeeper.DisplayMember = "Name";
                     currentKeeper.SelectedIndex = 0;
-                    //Aktualisiere Pfleger-Liste für die initial ausgewählte Tierart
+  
                     if (speciesCombo.SelectedValue is Guid selectedSpeciesId)
                     {
                         UpdateKeeperList(selectedSpeciesId);
@@ -580,12 +774,10 @@ namespace Zoorganize.Pages
                 }
             }
 
-            //Aktualisiere Pfleger-Liste basierend auf ausgewählter Tierart
             private void UpdateKeeperList(Guid speciesId)
             {
                 currentKeeper.Items.Clear();
                 currentKeeper.Items.Add("(Kein Pfleger)");
-                // ÄNDERUNG: Filtere Keeper die für diese Species autorisiert sind
                 var authorizedKeepers = allKeepers
                     .Where(k => k.AuthorizedSpecies.Any(s => s.Id == speciesId))
                     .OrderBy(k => k.Name)
@@ -599,19 +791,18 @@ namespace Zoorganize.Pages
                     }
 
                     currentKeeper.DisplayMember = "Name";
-                    currentKeeper.Enabled = true; // ÄNDERUNG: Aktiviere ComboBox
+                    currentKeeper.Enabled = true; 
                     currentKeeper.SelectedIndex = 0;
                 }
                 else
                 {
-                    // ÄNDERUNG: Keine autorisierten Keeper vorhanden
                     Label noKeeperLabel = new Label
                     {
                         Text = "(Keine autorisierten Pfleger)",
                         ForeColor = Color.Gray
                     };
                     currentKeeper.Items.Add(noKeeperLabel.Text);
-                    currentKeeper.Enabled = false; // ÄNDERUNG: Deaktiviere wenn keine Keeper
+                    currentKeeper.Enabled = false; 
                     currentKeeper.SelectedIndex = 0;
                 }
             }
@@ -634,21 +825,19 @@ namespace Zoorganize.Pages
             {
                 try
                 {
-                    // Validierung
                     if (string.IsNullOrWhiteSpace(name.Text))
                     {
                         MessageBox.Show("Bitte geben Sie einen Namen ein.");
                         return;
                     }
 
-                    // Validierung Tierart
+
                     if (speciesCombo.SelectedValue == null)
                     {
                         MessageBox.Show("Bitte wählen Sie eine Tierart aus.");
                         return;
                     }
 
-                    // Validierung Alter
                     int? parsedAge = ParseInt(age.Text);
                     if (!string.IsNullOrWhiteSpace(age.Text) && (!parsedAge.HasValue || parsedAge < 0))
                     {
@@ -656,15 +845,12 @@ namespace Zoorganize.Pages
                         return;
                     }
 
-                    // Validierung Gewicht
                     double? parsedWeight = ParseDouble(weightKg.Text);
                     if (!string.IsNullOrWhiteSpace(weightKg.Text) && (!parsedWeight.HasValue || parsedWeight <= 0))
                     {
                         MessageBox.Show("Bitte geben Sie ein gültiges Gewicht ein (positive Zahl).", "Validierung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
-
-                    //Gehege-ID extrahieren (null wenn "(Kein Gehege)" ausgewählt)
                     Guid? selectedEnclosureId = null;
                     if (enclosureCombo.SelectedIndex > 0 && enclosureCombo.SelectedItem is AnimalEnclosure selectedEnclosure)
                     {
@@ -677,7 +863,6 @@ namespace Zoorganize.Pages
                         selectedKeeperId = selectedKeeper.Id;
                     }
 
-                    // Erstelle AddAnimalType mit allen Feldern
                     AddAnimalType newAnimal = new()
                     {
                         Name = name.Text,

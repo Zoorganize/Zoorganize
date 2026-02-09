@@ -37,6 +37,7 @@ namespace Zoorganize.Pages
             animalLabel = new Label();
             typeOverview = new FlowLayoutPanel();
             animalOverview = new FlowLayoutPanel();
+            addSpeciesButton = new Button();
             delete = new Button();
             SuspendLayout();
             // 
@@ -60,7 +61,6 @@ namespace Zoorganize.Pages
             delete.TabIndex = 0;
             delete.Text = "Löschen";
             delete.Click += delete_Click;
-
             //
             // label1
             // 
@@ -82,6 +82,16 @@ namespace Zoorganize.Pages
             addAnimal.Text = "Neues Tier anlegen";
             addAnimal.UseVisualStyleBackColor = true;
             addAnimal.Click += addAnimal_Click;
+            //
+            //add Species Button
+            //
+            addSpeciesButton.Font = new Font("Segoe UI", 12F);
+            addSpeciesButton.Location = new Point(360, 67);
+            addSpeciesButton.Name = "addSpecies";
+            addSpeciesButton.Size = new Size(150, 31);
+            addSpeciesButton.TabIndex = 0;
+            addSpeciesButton.Text = "Neue Spezies hinzufügen";
+            addSpeciesButton.Click += AddSpecies_Click;
             //
             // Species Label
             //
@@ -132,6 +142,7 @@ namespace Zoorganize.Pages
             Controls.Add(speciesLabel);
             Controls.Add(button1);
             Controls.Add(delete);
+            Controls.Add(addSpeciesButton);
             FormBorderStyle = FormBorderStyle.None;
             Name = "AnimalsPage";
             Text = "AnimalsPage";
@@ -149,5 +160,6 @@ namespace Zoorganize.Pages
         private FlowLayoutPanel typeOverview;
         private FlowLayoutPanel animalOverview;
         private Button delete;
+        private Button addSpeciesButton;
     }
 }
