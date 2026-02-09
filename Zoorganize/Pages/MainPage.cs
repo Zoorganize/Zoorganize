@@ -13,9 +13,6 @@ namespace Zoorganize.Pages
 {
     public partial class MainPage : Form
     {
-        //TODO
-        string[] appointments = {"TEst line", "Test line2", "heres an appointment"};
-
         private readonly AppDbContext context;
         private readonly StaffFunctions staffFunctions;
         private readonly AnimalFunctions animalFunctions;
@@ -27,7 +24,6 @@ namespace Zoorganize.Pages
             appointmentList.Multiline = true;
             appointmentList.ScrollBars = ScrollBars.Vertical;
             appointmentList.ReadOnly = true;
-            appointmentList.Text = string.Join(Environment.NewLine, appointments);
 
             context = new AppDbContext();
 
@@ -36,7 +32,36 @@ namespace Zoorganize.Pages
             staffFunctions = new StaffFunctions(animalFunctions, context);
             animalFunctions.SetKeeperFunctions(staffFunctions); 
             roomFunctions = new RoomFunctions(context);
-            
+
+            LoadAppointments();
+        }
+
+        private async void LoadAppointments()
+        {
+            try
+            {
+                // Lade alle Termine aus der Datenbank
+                var appointments = await animalFunctions.GetUpcomingAppointments();
+
+                if (!appointments.Any())
+                {
+                    appointmentList.Text = "Keine bevorstehenden Termine.";
+                    return;
+                }
+
+                // Formatiere Termine für die Anzeige
+                var appointmentTexts = appointments.Select(a =>
+                    $"• {a.AppointmentDate:dd.MM.yyyy} - {a.Title}\n" +
+                    $"  Tier: {a.Animal?.Name ?? "Unbekannt"}\n" +
+                    (!string.IsNullOrWhiteSpace(a.Description) ? $"  {a.Description}\n" : "")
+                );
+
+                appointmentList.Text = string.Join(Environment.NewLine, appointmentTexts);
+            }
+            catch (Exception ex)
+            {
+                appointmentList.Text = $"Fehler beim Laden der Termine: {ex.Message}";
+            }
         }
 
         private void button1_Click(object sender, EventArgs e)

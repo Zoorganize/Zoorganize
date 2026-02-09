@@ -11,8 +11,10 @@ namespace Zoorganize.Pages
         private readonly AnimalFunctions animalFunctions;
         private readonly RoomFunctions roomFunctions;
         private readonly StaffFunctions staffFunctions;
+
         public List<Animal> animals = [];
         public List<Species> species = [];
+        private Animal? selectedAnimal = null;
 
         public AnimalsPage(AnimalFunctions animalFunctions, RoomFunctions roomFunctions, StaffFunctions staffFunctions)
         {
@@ -36,7 +38,7 @@ namespace Zoorganize.Pages
         private async void LoadSpecies()
         {
             species = await animalFunctions.GetSpecies();
-            RefreshSpeciesButtons(); // Zeigt ALLE Species
+            RefreshSpeciesButtons();
         }
 
         //Button zum zurückkehren zum Hauptmenü
@@ -214,26 +216,34 @@ namespace Zoorganize.Pages
         {
             if ((sender as Button)?.Tag is Animal animal)
             {
-                using var detailsForm = new AnimalDetailsForm(animal);
+                selectedAnimal = animal;
+
+                using var detailsForm = new AnimalDetailsForm(animal, animalFunctions);
                 detailsForm.Height = 350;
                 detailsForm.ShowDialog(this); // modal window
             }
         }
 
-        public partial class AnimalDetailsForm : Form
+
+        public partial class AnimalDetailsForm: Form
         {
+            
             private readonly Animal _animal;
+            private readonly AnimalFunctions _animalFunctions;
             public TextBox txtDetails = new TextBox();
             
 
 
-            public AnimalDetailsForm(Animal animal)
+            public AnimalDetailsForm(Animal animal, AnimalFunctions animalFunctions)
             {
                 _animal = animal;
+                _animalFunctions = animalFunctions;
+
                 Button vetAppointment = new Button();
                 Button lendAnimal = new Button();
+
                 vetAppointment.Text = "Tierarzt Besuch hinzufügen";
-                vetAppointment.Click += vetAppointment_Click;
+                vetAppointment.Click += VetAppointment_Click;
                 vetAppointment.Width = 250;
                 vetAppointment.Top = 260;
                 vetAppointment.Left = 20;
@@ -254,6 +264,7 @@ namespace Zoorganize.Pages
                 Controls.Add(txtDetails);
                 Controls.Add(vetAppointment);
                 Controls.Add(lendAnimal);
+
                 LoadAnimalDetails();
             }
 
@@ -294,74 +305,152 @@ namespace Zoorganize.Pages
                 Text = $"Details: {_animal.Name}";
             }
 
-            private void vetAppointment_Click(object sender, EventArgs e)
+            private async void VetAppointment_Click(object sender, EventArgs e)
             {
                 using var form = new InputAppointment();
 
                 if (form.ShowDialog(this) == DialogResult.OK)
                 {
-                    string appointmentName = form.AppointmentName;
-                    DateTime appointmentDate = form.AppointmentDate;
-                    string notes = form.Notes;
+                    try
+                    {
+                        var appointmentData = new AddAppointmentType
+                        {
+                            Title = form.AppointmentName,                   
+                            Date = form.AppointmentDate,
+                            Notes = string.IsNullOrWhiteSpace(form.Notes)
+                                ? null
+                                : form.Notes                 
+                        };
 
-                    // TODO: save appointment to animal / database
-                    MessageBox.Show(
-                        $"Termin gespeichert:\n{appointmentName}\n{appointmentDate:dd.MM.yyyy}",
-                        "Erfolg",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Information
-                    );
+                        var updatedAnimal = await _animalFunctions.AddAppointment(_animal.Id, appointmentData);
+
+                        MessageBox.Show(
+                            $"Termin '{appointmentData.Title}' erfolgreich hinzugefügt!\nDatum: {appointmentData.Date:dd.MM.yyyy}",
+                            "Erfolg",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+
+                        // ÄNDERUNG: Optional - zeige Termine an
+                        ShowAnimalAppointments(updatedAnimal);
+                    }
+                    catch (KeyNotFoundException ex)
+                    {
+                        MessageBox.Show($"Tier nicht gefunden: {ex.Message}", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Fehler beim Hinzufügen des Termins: {ex.Message}", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
 
-            private void LendAnimal_Click(object sender, EventArgs e)
+            private void ShowAnimalAppointments(Animal animal)
+            {
+                if (animal.VeterinaryAppointments == null || !animal.VeterinaryAppointments.Any())
+                {
+                    MessageBox.Show("Keine Termine vorhanden.", "Termine", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                string appointments = $"Termine für {animal.Name}:\n\n";
+                foreach (var appointment in animal.VeterinaryAppointments.OrderBy(a => a.AppointmentDate))
+                {
+                    appointments += $"• {appointment.Title} - {appointment.AppointmentDate:dd.MM.yyyy}\n";
+                    if (!string.IsNullOrWhiteSpace(appointment.Description))
+                    {
+                        appointments += $"  {appointment.Description}\n";
+                    }
+                    appointments += "\n";
+                }
+
+                MessageBox.Show(appointments, "Tierarzttermine", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+
+            private async void LendAnimal_Click(object sender, EventArgs e)
             {
                 using var form = new LendAnimal();
 
                 if (form.ShowDialog(this) == DialogResult.OK)
                 {
-                    string zooName = form.ZooName;
-                    DateTime startDate = form.StartDate;
-                    DateTime endDate = form.EndDate;
-                    string notes = form.Notes;
-
-                    // Basic validation
-                    if (endDate < startDate)
+                    try
                     {
-                        MessageBox.Show(
-                            "Enddatum darf nicht vor dem Startdatum liegen.",
-                            "Fehler",
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Error
-                        );
-                        return;
-                    }
+                        var stayData = new AddExternalZooStayType
+                        {
+                            ZooName = form.ZooName,
+                            StartDate = form.StartDate,
+                            EndDate = form.EndDate,
+                            Notes = string.IsNullOrWhiteSpace(form.Notes)
+                                ? null
+                                : form.Notes
+                        };
 
-                    // TODO: process lending logic
-                    MessageBox.Show(
-                        $"Tier ausgeliehen an {zooName}\n" +
-                        $"Von {startDate:dd.MM.yyyy} bis {endDate:dd.MM.yyyy}",
-                        "Erfolg",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Information
-                    );
+                        var updatedAnimal = await _animalFunctions.AddExternalZooStay(_animal.Id, stayData);
+
+                        MessageBox.Show(
+                            $"Tier erfolgreich an '{stayData.ZooName}' ausgeliehen!\n" +
+                            $"Von {stayData.StartDate:dd.MM.yyyy} bis {stayData.EndDate:dd.MM.yyyy}",
+                            "Erfolg",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+
+                        // Optional: Zeige alle Stays an
+                        ShowAnimalStays(updatedAnimal);
+                    }
+                    catch (KeyNotFoundException ex)
+                    {
+                        MessageBox.Show($"Tier nicht gefunden: {ex.Message}", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        MessageBox.Show($"Ungültige Eingabe: {ex.Message}", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Fehler beim Ausleihen: {ex.Message}", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
+            }
+
+            private void ShowAnimalStays(Animal animal)
+            {
+                if (animal.ExternalZooStays == null || !animal.ExternalZooStays.Any())
+                {
+                    MessageBox.Show("Keine Zoo-Aufenthalte vorhanden.", "Aufenthalte", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                string stays = $"Zoo-Aufenthalte für {animal.Name}:\n\n";
+                foreach (var stay in animal.ExternalZooStays.OrderByDescending(s => s.StartDate))
+                {
+                    stays += $"• {stay.ZooName}\n";
+                    stays += $"  Von: {stay.StartDate:dd.MM.yyyy} bis {stay.EndDate:dd.MM.yyyy}\n";
+
+                    if (!string.IsNullOrWhiteSpace(stay.Description))
+                    {
+                        stays += $"  Notizen: {stay.Description}\n";
+                    }
+                    stays += "\n";
+                }
+
+                MessageBox.Show(stays, "Zoo-Aufenthalte", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
 
         }
 
         public class InputAppointment : Form
         {
-            private TextBox txtName;
+            
+            private TextBox txtTitle;
             private DateTimePicker dtpDate;
             private TextBox txtNotes;
 
-            public string AppointmentName => txtName.Text;
+            public string AppointmentName => txtTitle.Text;
             public DateTime AppointmentDate => dtpDate.Value;
             public string Notes => txtNotes.Text;
 
             public InputAppointment()
             {
+
                 Text = "Veterinärtermin hinzufügen";
                 Width = 400;
                 Height = 300;
@@ -371,7 +460,7 @@ namespace Zoorganize.Pages
                 MinimizeBox = false;
 
                 Label lblName = new Label { Text = "Terminname:", Left = 10, Top = 15, Width = 120 };
-                txtName = new TextBox { Left = 140, Top = 12, Width = 220 };
+                txtTitle = new TextBox { Left = 140, Top = 12, Width = 220 };
 
                 Label lblDate = new Label { Text = "Datum:", Left = 10, Top = 50, Width = 120 };
                 dtpDate = new DateTimePicker
@@ -396,16 +485,26 @@ namespace Zoorganize.Pages
                 Button btnOk = new Button { Text = "OK", Left = 200, Top = 180, DialogResult = DialogResult.OK };
                 Button btnCancel = new Button { Text = "Abbrechen", Left = 280, Top = 180, DialogResult = DialogResult.Cancel };
 
+                btnOk.Click += BtnOk_Click; //Validierung hinzugefügt
+
                 AcceptButton = btnOk;
                 CancelButton = btnCancel;
 
                 Controls.AddRange(new Control[]
                 {
-            lblName, txtName,
-            lblDate, dtpDate,
-            lblNotes, txtNotes,
-            btnOk, btnCancel
+                    lblName, txtTitle ,
+                    lblDate, dtpDate,
+                    lblNotes, txtNotes,
+                    btnOk, btnCancel
                 });
+            }
+            private async void BtnOk_Click(object sender, EventArgs e)
+            {
+                if (string.IsNullOrWhiteSpace(txtTitle.Text))
+                {
+                    MessageBox.Show("Bitte geben Sie einen Titel ein.", "Validierung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    DialogResult = DialogResult.None; // Verhindert Schließen
+                }
             }
         }
 
@@ -415,11 +514,13 @@ namespace Zoorganize.Pages
             private TextBox txtZooName;
             private DateTimePicker dtpStart;
             private DateTimePicker dtpEnd;
+            private CheckBox chkHasEndDate;
+            private Label lblEnd;
             private TextBox txtNotes;
 
             public string ZooName => txtZooName.Text;
             public DateTime StartDate => dtpStart.Value;
-            public DateTime EndDate => dtpEnd.Value;
+            public DateTime? EndDate => chkHasEndDate.Checked ? dtpEnd.Value : null;
             public string Notes => txtNotes.Text;
 
             public LendAnimal()
@@ -444,13 +545,24 @@ namespace Zoorganize.Pages
                     Format = DateTimePickerFormat.Short
                 };
 
+                chkHasEndDate = new CheckBox
+                {
+                    Text = "Enddatum festlegen",
+                    Left = 10,
+                    Top = 85,
+                    Width = 200,
+                    Checked = false
+                };
+                chkHasEndDate.CheckedChanged += ChkHasEndDate_CheckedChanged;
+
                 Label lblEnd = new Label { Text = "Enddatum:", Left = 10, Top = 85, Width = 120 };
                 dtpEnd = new DateTimePicker
                 {
                     Left = 140,
                     Top = 82,
                     Width = 220,
-                    Format = DateTimePickerFormat.Short
+                    Format = DateTimePickerFormat.Short,
+                    Visible = false
                 };
 
                 Label lblNotes = new Label { Text = "Notizen:", Left = 10, Top = 120, Width = 120 };
@@ -467,17 +579,42 @@ namespace Zoorganize.Pages
                 Button btnOk = new Button { Text = "OK", Left = 200, Top = 230, DialogResult = DialogResult.OK };
                 Button btnCancel = new Button { Text = "Abbrechen", Left = 280, Top = 230, DialogResult = DialogResult.Cancel };
 
+                btnOk.Click += BtnOk_Click;
+
                 AcceptButton = btnOk;
                 CancelButton = btnCancel;
 
                 Controls.AddRange(new Control[]
                 {
-            lblZoo, txtZooName,
-            lblStart, dtpStart,
-            lblEnd, dtpEnd,
-            lblNotes, txtNotes,
-            btnOk, btnCancel
+                    lblZoo, txtZooName,
+                    lblStart, dtpStart,
+                    lblEnd, dtpEnd,
+                    lblNotes, txtNotes,
+                    btnOk, btnCancel
                 });
+            }
+
+            private void ChkHasEndDate_CheckedChanged(object sender, EventArgs e)
+            {
+                lblEnd.Visible = chkHasEndDate.Checked;
+                dtpEnd.Visible = chkHasEndDate.Checked;
+            }
+
+            private void BtnOk_Click(object sender, EventArgs e)
+            {
+                if (string.IsNullOrWhiteSpace(txtZooName.Text))
+                {
+                    MessageBox.Show("Bitte geben Sie einen Zoo-Namen ein.", "Validierung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    DialogResult = DialogResult.None;
+                    return;
+                }
+
+                if (dtpEnd.Value < dtpStart.Value)
+                {
+                    MessageBox.Show("Enddatum darf nicht vor dem Startdatum liegen.", "Validierung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    DialogResult = DialogResult.None;
+                    return;
+                }
             }
         }
 

@@ -7,7 +7,7 @@
         public required Animal Animal { get; set; }
 
         public required string Title { get; set; }
-        public DateOnly AppointmentDate { get; set; }
+        public DateTime AppointmentDate { get; set; }
         public string? Description { get; set; }
 
     }

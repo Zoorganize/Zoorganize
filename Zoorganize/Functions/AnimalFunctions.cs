@@ -10,7 +10,7 @@ namespace Zoorganize.Functions
         private readonly AppDbContext inContext;
         private StaffFunctions? staffFunctions;
 
-        // Konstruktor macht keeperFunctions optional
+       
         public AnimalFunctions(AppDbContext inContext, StaffFunctions? staffFunctions = null)
         {
             this.inContext = inContext;
@@ -24,7 +24,7 @@ namespace Zoorganize.Functions
         }
         //Funktionen, die sich mit Tieren beschäftigen, z.B. Berechnung des Alters, etc.
         //Funktionen, die ich für die Erstellung der Oberfläche hinsichtlich der Tiere brauche, z.B. Anzeige von Informationen, etc.
-        //alle Tierarten (bestimmte Sortierung?)
+        //alle Tierarten 
         public async Task<List<Species>> GetSpecies() 
         { 
             return await inContext.Species.OrderBy(s => s.CommonName).ToListAsync();
@@ -39,7 +39,7 @@ namespace Zoorganize.Functions
             }
             return species;
         }
-        //alle Tiere (bestimmte Sortierung?)
+        //alle Tiere 
         public async Task<List<Animal>> GetAnimals()
         {
             return await inContext.Animals.Include(a => a.Species).OrderBy(s => s.Name).ToListAsync();
@@ -54,12 +54,12 @@ namespace Zoorganize.Functions
             }
             return animal;
         }
-        //neues Tier anlegen => name species age habitat
+        
         public async Task AddAnimal(AddAnimalType newAnimal)
         {
             
-            var animal = new Animal
-            {
+           var animal = new Animal
+           {
                 Id = Guid.NewGuid(),
                 Name = newAnimal.Name,
                 SpeciesId = newAnimal.SpeciesId,
@@ -84,17 +84,14 @@ namespace Zoorganize.Functions
                 VeterinaryAppointments = [],
                 CurrentEnclosureId = newAnimal.CurrentEnclosureId,
                 KeeperId = newAnimal.KeeperId
-            };
+           };
 
-            animal.Species = await inContext.Species.FindAsync(animal.SpeciesId);
+           animal.Species = await inContext.Species.FindAsync(animal.SpeciesId);
 
-            //Lade CurrentEnclosure wenn gesetzt
+           //Lade CurrentEnclosure wenn gesetzt
             
-                animal.CurrentEnclosure = await inContext.AnimalEnclosures.FindAsync(newAnimal.CurrentEnclosureId);
-            
-
-            
-                animal.Keeper = await staffFunctions.GetStaffById(newAnimal.KeeperId);
+            animal.CurrentEnclosure = await inContext.AnimalEnclosures.FindAsync(newAnimal.CurrentEnclosureId);
+            animal.Keeper = await staffFunctions.GetStaffById(newAnimal.KeeperId);
             
 
             inContext.Animals.Add(animal);
@@ -142,7 +139,85 @@ namespace Zoorganize.Functions
             return species;
         }
 
-        //Tier löschen
+        public async Task<Animal> AddAppointment(Guid animalId, AddAppointmentType newAppointment)
+        {
+            var animalExists = await inContext.Animals.AnyAsync(a => a.Id == animalId);
+            if (!animalExists)
+            {
+                throw new KeyNotFoundException($"Animal with ID {animalId} not found");
+            }
+
+            // Erstelle Appointment
+            var appointment = new VeterinaryAppointment
+            {
+                Id = Guid.NewGuid(),
+                Title = newAppointment.Title,
+                AppointmentDate = newAppointment.Date,
+                Description = newAppointment.Notes,
+                AnimalId = animalId,
+                Animal = await inContext.Animals.FindAsync(animalId)
+            };
+
+            
+            inContext.VeterinaryAppointments.Add(appointment);
+            await inContext.SaveChangesAsync();
+
+            var animal = await inContext.Animals
+                .Include(a => a.VeterinaryAppointments)
+                .Include(a => a.Species)
+                .Include(a => a.CurrentEnclosure)
+                .Include(a => a.Keeper)
+                .FirstOrDefaultAsync(a => a.Id == animalId);
+
+            return animal;
+        }
+
+        public async Task<Animal> AddExternalZooStay(Guid animalId, AddExternalZooStayType newStay)
+        {
+            // Validierung: Zoo-Name
+            if (string.IsNullOrWhiteSpace(newStay.ZooName))
+            {
+                throw new ArgumentException("Zoo name cannot be empty");
+            }
+
+            // Validierung: Datumsbereich
+            if (newStay.EndDate < newStay.StartDate)
+            {
+                throw new ArgumentException("End date cannot be before start date");
+            }
+
+            // Prüfe ob Tier existiert
+            var animalExists = await inContext.Animals.AnyAsync(a => a.Id == animalId);
+            if (!animalExists)
+            {
+                throw new KeyNotFoundException($"Animal with ID {animalId} not found");
+            }
+
+            // Erstelle ExternalZooStay
+            var stay = new ExternalZooStay
+            {
+                Id = Guid.NewGuid(),
+                ZooName = newStay.ZooName,
+                StartDate = DateOnly.FromDateTime(newStay.StartDate),
+                EndDate = newStay.EndDate.HasValue
+                    ? DateOnly.FromDateTime(newStay.EndDate.Value)
+                    : null,
+                Description = newStay.Notes,
+                AnimalId = animalId,
+                Animal = await inContext.Animals.FindAsync(animalId)
+            };
+
+            // Füge direkt zum Context hinzu
+            inContext.ExternalZooStays.Add(stay);
+            await inContext.SaveChangesAsync();
+
+            // Lade Tier mit allen Stays
+            var animal = await inContext.Animals
+                .Include(a => a.ExternalZooStays)
+                .FirstOrDefaultAsync(a => a.Id == animalId);
+
+            return animal ?? throw new KeyNotFoundException($"Animal with ID {animalId} not found after save");
+        }
 
         public async Task<List<Animal>> DeleteAnimal(Guid animalId)
         {
@@ -175,7 +250,25 @@ namespace Zoorganize.Functions
         }
 
         //Funktion, die Termine für Tiere holt z.B. Arzttermine
+        public async Task<List<VeterinaryAppointment>> GetUpcomingAppointments(int daysAhead = 30)
+        {
+            var today = DateTime.Now.Date;
+            var endDate = today.AddDays(daysAhead);
 
+            return await inContext.VeterinaryAppointments
+                .Include(a => a.Animal) 
+                .Where(a => a.AppointmentDate >= today && a.AppointmentDate <= endDate)
+                .OrderBy(a => a.AppointmentDate)
+                .ToListAsync();
+        }
+        //Momentan nicht gebraucht, aber könnte später nützlich sein, um alle Termine anzuzeigen
+        public async Task<List<VeterinaryAppointment>> GetAllAppointments()
+        {
+            return await inContext.VeterinaryAppointments
+                .Include(a => a.Animal)
+                .OrderBy(a => a.AppointmentDate)
+                .ToListAsync();
+        }
 
     }
 }

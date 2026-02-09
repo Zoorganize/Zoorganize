@@ -327,7 +327,7 @@ namespace Zoorganize.Migrations
                     b.Property<Guid>("AnimalId")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateOnly>("AppointmentDate")
+                    b.Property<DateTime>("AppointmentDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Description")

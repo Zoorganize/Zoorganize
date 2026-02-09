@@ -102,7 +102,7 @@
             appointmentList.Location = new Point(12, 185);
             appointmentList.Multiline = true;
             appointmentList.Name = "appointmentList";
-            appointmentList.Size = new Size(204, 403);
+            appointmentList.Size = new Size(286, 403);
             appointmentList.TabIndex = 5;
             // 
             // MainPage

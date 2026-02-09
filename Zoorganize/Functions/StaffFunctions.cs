@@ -7,11 +7,7 @@ namespace Zoorganize.Functions
 {
     public class StaffFunctions(AnimalFunctions animalFunctions, AppDbContext inContext)
     {
-        //Funktionen, die sich mit Pflegern beschäftigen, z.B. Berechnung der Arbeitszeit, etc.
-        //Funktionen, die ich für die Erstellung der Oberfläche hinsichtlich der Pfleger brauche, z.B. Anzeige von Informationen, etc.
-        //neuen Pfleger anlegen => Name, gebiurtstag, gehalt, notizen
-        //alle Pfleger holen (bestimmte Sortierung?)
-        //Pfleger löschen
+        
         public async Task<List<Staff>> GetStaff()
         {
             return await inContext.Staff.Include(s => s.AuthorizedSpecies).ToListAsync();
