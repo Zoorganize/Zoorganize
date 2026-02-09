@@ -17,7 +17,7 @@ namespace Zoorganize.Pages
         string[] appointments = {"TEst line", "Test line2", "heres an appointment"};
 
         private readonly AppDbContext context;
-        private readonly KeeperFunctions keeperFunctions;
+        private readonly StaffFunctions staffFunctions;
         private readonly AnimalFunctions animalFunctions;
         private readonly RoomFunctions roomFunctions;
 
@@ -31,19 +31,17 @@ namespace Zoorganize.Pages
 
             context = new AppDbContext();
 
-            // Zeige den GENAUEN Pfad der verwendeten Datenbank
-            var dbPath = context.Database.GetDbConnection().DataSource;
-            var fullPath = System.IO.Path.GetFullPath(dbPath);
-            MessageBox.Show($"Verwendete Datenbank:\n{fullPath}\n\nExistiert: {System.IO.File.Exists(fullPath)}");
+            
             animalFunctions = new AnimalFunctions(context, null);  
-            keeperFunctions = new KeeperFunctions(animalFunctions, context);
-            animalFunctions.SetKeeperFunctions(keeperFunctions); 
+            staffFunctions = new StaffFunctions(animalFunctions, context);
+            animalFunctions.SetKeeperFunctions(staffFunctions); 
             roomFunctions = new RoomFunctions(context);
+            
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            AnimalsPage animals = new AnimalsPage(this.animalFunctions);
+            AnimalsPage animals = new AnimalsPage(this.animalFunctions, this.roomFunctions, this.staffFunctions);
             animals.Dock = DockStyle.Fill;
             animals.TopLevel = false;
             MainForm.MainPanel.Controls.Clear();
@@ -64,7 +62,7 @@ namespace Zoorganize.Pages
 
         private void button3_Click(object sender, EventArgs e)
         {
-            WorkersPage worker = new WorkersPage(this.keeperFunctions);
+            WorkersPage worker = new WorkersPage(this.staffFunctions, this.animalFunctions);
             worker.Dock = DockStyle.Fill;
             worker.TopLevel = false;
             MainForm.MainPanel.Controls.Clear();

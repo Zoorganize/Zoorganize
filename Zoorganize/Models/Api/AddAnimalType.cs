@@ -9,11 +9,12 @@
         public int? Age { get; set; }
         public string? ArrivalDate { get; set; }
 
-        public List<Guid> Keepers { get; set; } = [];
 
         //Herkunft
         public int Origin { get; set; }
 
+        public Guid CurrentEnclosureId { get; set; }
+        public Guid KeeperId { get; set; }
 
         //Sex
         public int? Sex { get; set; }

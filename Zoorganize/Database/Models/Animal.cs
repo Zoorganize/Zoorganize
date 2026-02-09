@@ -11,7 +11,9 @@
         public int? Age { get; set; }
         public DateOnly ArrivalDate { get; set; }
 
-        public List<Staff> Keepers { get; set; } = [];
+        public Guid? KeeperId { get; set; }
+
+        public Staff? Keeper { get; set; } 
 
         //Herkunft
         public AnimalOrigin Origin { get; set; }

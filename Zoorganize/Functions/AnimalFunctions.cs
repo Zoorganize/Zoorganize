@@ -8,19 +8,19 @@ namespace Zoorganize.Functions
     public class AnimalFunctions
     {
         private readonly AppDbContext inContext;
-        private KeeperFunctions? keeperFunctions;
+        private StaffFunctions? staffFunctions;
 
         // Konstruktor macht keeperFunctions optional
-        public AnimalFunctions(AppDbContext inContext, KeeperFunctions? keeperFunctions = null)
+        public AnimalFunctions(AppDbContext inContext, StaffFunctions? staffFunctions = null)
         {
             this.inContext = inContext;
-            this.keeperFunctions = keeperFunctions;
+            this.staffFunctions = staffFunctions;
         }
 
         // Methode zum nachträglichen Setzen
-        public void SetKeeperFunctions(KeeperFunctions kf)
+        public void SetKeeperFunctions(StaffFunctions kf)
         {
-            this.keeperFunctions = kf;
+            this.staffFunctions = kf;
         }
         //Funktionen, die sich mit Tieren beschäftigen, z.B. Berechnung des Alters, etc.
         //Funktionen, die ich für die Erstellung der Oberfläche hinsichtlich der Tiere brauche, z.B. Anzeige von Informationen, etc.
@@ -80,17 +80,22 @@ namespace Zoorganize.Functions
                 InQuarantine = newAnimal.InQuarantine ?? false,
                 Aggressive = newAnimal.Aggressive ?? false,
                 RequiresSeparation = newAnimal.RequiresSeparation ?? false,
-                Keepers = [],
                 ExternalZooStays = [],
-                VeterinaryAppointments = []
+                VeterinaryAppointments = [],
+                CurrentEnclosureId = newAnimal.CurrentEnclosureId,
+                KeeperId = newAnimal.KeeperId
             };
 
             animal.Species = await inContext.Species.FindAsync(animal.SpeciesId);
 
-            if (newAnimal.Keepers.Any())
-            {
-                animal.Keepers = await keeperFunctions.GetStaffByIds(newAnimal.Keepers);
-            }
+            //Lade CurrentEnclosure wenn gesetzt
+            
+                animal.CurrentEnclosure = await inContext.AnimalEnclosures.FindAsync(newAnimal.CurrentEnclosureId);
+            
+
+            
+                animal.Keeper = await staffFunctions.GetStaffById(newAnimal.KeeperId);
+            
 
             inContext.Animals.Add(animal);
             await inContext.SaveChangesAsync();

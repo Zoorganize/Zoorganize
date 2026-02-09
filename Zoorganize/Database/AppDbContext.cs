@@ -50,8 +50,10 @@ namespace Zoorganize.Database
                     .OnDelete(DeleteBehavior.Cascade);
 
                 // Many-to-Many Beziehung zu Staff (Keepers)
-                entity.HasMany(a => a.Keepers)
-                    .WithMany(s => s.AssignedAnimals);
+                entity.HasOne(a => a.Keeper)
+                    .WithMany(s => s.AssignedAnimals)
+                    .HasForeignKey(a => a.KeeperId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             // AnimalEnclosure

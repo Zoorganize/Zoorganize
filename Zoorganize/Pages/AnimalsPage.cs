@@ -5,19 +5,22 @@ using Zoorganize.Models.Api;
 
 namespace Zoorganize.Pages
 {
-
-
     public partial class AnimalsPage : Form
     {
         private readonly AnimalFunctions animalFunctions;
+        private readonly RoomFunctions roomFunctions;
+        private readonly StaffFunctions staffFunctions;
         public List<Animal> animals = [];
         public List<Species> species = [];
 
-        public AnimalsPage(AnimalFunctions animalFunctions)
+        public AnimalsPage(AnimalFunctions animalFunctions, RoomFunctions roomFunctions, StaffFunctions staffFunctions)
         {
             this.animalFunctions = animalFunctions;
+            this.roomFunctions = roomFunctions;
+            this.staffFunctions = staffFunctions;
             InitializeComponent();
 
+            //Das muss dann weg und anpassen
             Button addSpeciesButton = new Button
             {
                 Text = "Tierart hinzufügen",
@@ -31,6 +34,7 @@ namespace Zoorganize.Pages
 
             LoadAnimals();
             LoadSpecies();
+            
         }
         private async void LoadAnimals()
         {
@@ -47,9 +51,11 @@ namespace Zoorganize.Pages
         //Button zum zurückkehren zum Hauptmenü
         private void button1_Click(object sender, EventArgs e)
         {
-            MainPage mainPage = new MainPage();
-            mainPage.Dock = DockStyle.Fill;
-            mainPage.TopLevel = false;
+            MainPage mainPage = new()
+            {
+                Dock = DockStyle.Fill,
+                TopLevel = false
+            };
             MainForm.MainPanel.Controls.Clear();
             MainForm.MainPanel.Controls.Add(mainPage);
             mainPage.Show();
@@ -98,7 +104,7 @@ namespace Zoorganize.Pages
         //Dieser Button öffnet ein Fenster, wo Informationen über das Tier eingegeben werden können
         private async void addAnimal_Click(object sender, EventArgs e)
         {
-            using (var dlg = new AnimalForm(animalFunctions))
+            using (var dlg = new AnimalForm(animalFunctions, roomFunctions, staffFunctions))
             {
                 dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
                 dlg.ShowInTaskbar = false;
@@ -126,8 +132,8 @@ namespace Zoorganize.Pages
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     MessageBox.Show("Tierart erfolgreich hinzugefügt!");
-                    LoadSpecies(); // ✅ Lade Species neu
-                    RefreshSpeciesButtons(); // ✅ Aktualisiere Anzeige
+                    LoadSpecies(); 
+                    RefreshSpeciesButtons(); 
                 }
             }
         }
@@ -184,7 +190,7 @@ namespace Zoorganize.Pages
             animalOverview.Controls.Clear();
 
             var filteredAnimals = animals
-                .Where(a => a.SpeciesId == speciesId) // ✅ Filtere nach ID statt Name
+                .Where(a => a.SpeciesId == speciesId) 
                 .ToList();
 
             if (!filteredAnimals.Any())
@@ -217,16 +223,50 @@ namespace Zoorganize.Pages
         {
             if ((sender as Button)?.Tag is Animal animal)
             {
-                //Vlt hier extra Klasse für die Anzeige der Tierdetails
-                
-                MessageBox.Show(
-                    $"Name: {animal.Name}\n" +
-                    $"Species: {animal.Species.CommonName}\n" +
+                string details = $"Name: {animal.Name}\n" +
+                    $"Tierart: {animal.Species?.CommonName ?? "Unbekannt"}\n" +
+                    $"Wissenschaftlicher Name: {animal.Species?.ScientificName ?? "N/A"}\n" +
                     $"Alter: {animal.Age?.ToString() ?? "Unbekannt"}\n" +
-                    $"Gehege: {animal.CurrentEnclosure?.Name ?? "Kein Gehege zugewiesen"}",
-                    "Tier-Details",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                    $"Ankunftsdatum: {animal.ArrivalDate:dd.MM.yyyy}\n" +
+                    $"Herkunft: {animal.Origin}\n" +
+                    $"Geschlecht: {animal.Sex}\n" +
+                    $"Kastriert: {(animal.IsNeutered ? "Ja" : "Nein")}\n";
+
+                //Trächtig nur bei weiblichen Tieren anzeigen
+                if (animal.Sex == Sex.female)
+                {
+                    details += $"Trächtig: {(animal.IsPregnant ? "Ja" : "Nein")}\n";
+                }
+
+                details += $"Gesundheitsstatus: {animal.HealthStatus}\n";
+
+                //Gewicht nur wenn vorhanden
+                if (animal.WeightKg.HasValue)
+                {
+                    details += $"Gewicht: {animal.WeightKg:F2} kg\n";
+                }
+
+                details += $"In Quarantäne: {(animal.InQuarantine ? "Ja" : "Nein")}\n" +
+                    $"Aggressiv: {(animal.Aggressive ? "Ja" : "Nein")}\n" +
+                    $"Benötigt Trennung: {(animal.RequiresSeparation ? "Ja" : "Nein")}\n" +
+                    $"Gehege: {animal.CurrentEnclosure?.Name ?? "Kein Gehege zugewiesen"}\n";
+
+                //Pfleger anzeigen(wie bei Mitarbeitern -> Tierarten)
+                details += $"Pfleger: {animal.Keeper?.Name ?? "Unbekannt"}\n";
+                
+
+                //Notizen am Ende
+                if (!string.IsNullOrWhiteSpace(animal.Note))
+                {
+                    details += $"Notizen: {animal.Note}\n";
+                }
+
+                if (!string.IsNullOrWhiteSpace(animal.BehavioralNotes))
+                {
+                    details += $"Verhaltensnotizen: {animal.BehavioralNotes}\n";
+                }
+
+                MessageBox.Show(details, $"Details: {animal.Name}", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
@@ -236,6 +276,8 @@ namespace Zoorganize.Pages
         class AnimalForm : Form
         {
             private readonly AnimalFunctions _animalFunctions;
+            private readonly RoomFunctions _roomFunctions;
+            private readonly StaffFunctions _staffFunctions;
 
             // Basis-Informationen
             TextBox name = new TextBox();
@@ -250,6 +292,12 @@ namespace Zoorganize.Pages
             CheckBox isNeutered = new CheckBox();
             CheckBox isPregnant = new CheckBox();
 
+            //Gehege-Auswahl hinzugefügt
+            ComboBox enclosureCombo = new ComboBox();
+
+            //Pfleger-Auswahl
+            ComboBox currentKeeper = new();
+
             // Gesundheit
             ComboBox healthStatus = new ComboBox();
             TextBox weightKg = new TextBox();
@@ -262,14 +310,19 @@ namespace Zoorganize.Pages
 
             Button submit = new Button();
 
+            private List<Staff> allKeepers = new List<Staff>();
+
             public Animal animal { get; private set; }
 
-            public AnimalForm(AnimalFunctions animalFunctions)
+            public AnimalForm(AnimalFunctions animalFunctions, RoomFunctions roomFunctions, StaffFunctions staffFunctions)
             {
                 _animalFunctions = animalFunctions;
+                _roomFunctions = roomFunctions;
+                _staffFunctions = staffFunctions;
+
                 Text = "Tier hinzufügen";
                 Width = 500;
-                Height = 750;
+                Height = 850;
                 AutoScroll = true;
 
                 int leftLabel = 20;
@@ -291,6 +344,7 @@ namespace Zoorganize.Pages
                 speciesCombo.Top = top;
                 speciesCombo.Width = controlWidth;
                 speciesCombo.DropDownStyle = ComboBoxStyle.DropDownList;
+                speciesCombo.SelectedIndexChanged += SpeciesCombo_SelectedIndexChanged;
                 Controls.Add(speciesCombo);
                 top += spacing;
 
@@ -356,6 +410,32 @@ namespace Zoorganize.Pages
                 isPregnant.Top = top;
                 isPregnant.Width = controlWidth;
                 Controls.Add(isPregnant);
+                top += spacing;
+
+                // === HALTUNG ===
+                top += 10;
+                AddLabel("--- HALTUNG ---", leftLabel, top);
+                top += spacing;
+
+                // Gehege-Auswahl
+                AddLabel("Gehege:", leftLabel, top);
+                enclosureCombo.Left = leftControl;
+                enclosureCombo.Top = top;
+                enclosureCombo.Width = controlWidth;
+                enclosureCombo.DropDownStyle = ComboBoxStyle.DropDownList;
+                enclosureCombo.Items.Add("(Kein Gehege)");
+                Controls.Add(enclosureCombo);
+                top += spacing;
+
+                // Pfleger-Auswahl => Problem, nicht alle Keeper können diese Species auch betreuen, aber das weiß ich erst, wenn ich die Tierart ausgewählt habe, also muss ich die Liste der Pfleger aktualisieren, wenn eine Tierart ausgewählt wird
+                AddLabel("Pfleger:", leftLabel, top);
+                currentKeeper.Left = leftControl;
+                currentKeeper.Top = top;
+                currentKeeper.Width = controlWidth;
+                currentKeeper.DropDownStyle = ComboBoxStyle.DropDownList;
+                currentKeeper.Items.Add("(Kein Pfleger)");
+                currentKeeper.Enabled = false; // ÄNDERUNG: Initial deaktiviert bis Tierart gewählt
+                Controls.Add(currentKeeper);
                 top += spacing;
 
                 // === GESUNDHEIT ===
@@ -427,7 +507,10 @@ namespace Zoorganize.Pages
                 Controls.Add(submit);
 
                 LoadSpecies();
+                LoadEnclosures();
+                LoadKeepers();
             }
+
 
             private void AddLabel(string text, int left, int top)
             {
@@ -440,6 +523,97 @@ namespace Zoorganize.Pages
                     AutoSize = false
                 };
                 Controls.Add(label);
+            }
+
+            private async void LoadEnclosures()
+            {
+                try
+                {
+                    var enclosures = await _roomFunctions.GetAnimalEnclosures(); 
+
+                    // Füge Gehege zur ComboBox hinzu (nach "(Kein Gehege)")
+                    foreach (var enclosure in enclosures.OrderBy(e => e.Name))
+                    {
+                        enclosureCombo.Items.Add(enclosure);
+                    }
+
+                    enclosureCombo.DisplayMember = "Name";
+                    enclosureCombo.SelectedIndex = 0; 
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Fehler beim Laden der Gehege: {ex.Message}", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+
+            private async void LoadKeepers()
+            {
+                try
+                {
+                    allKeepers = await _staffFunctions.GetKeepers();
+
+                    
+                    foreach (var keeper in allKeepers)
+                    {
+                        currentKeeper.Items.Add(keeper);
+                    }
+
+                    currentKeeper.DisplayMember = "Name";
+                    currentKeeper.SelectedIndex = 0;
+                    //Aktualisiere Pfleger-Liste für die initial ausgewählte Tierart
+                    if (speciesCombo.SelectedValue is Guid selectedSpeciesId)
+                    {
+                        UpdateKeeperList(selectedSpeciesId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Fehler beim Laden der Keeper: {ex.Message}", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+
+            private void SpeciesCombo_SelectedIndexChanged(object sender, EventArgs e)
+            {
+                if (speciesCombo.SelectedValue is Guid selectedSpeciesId)
+                {
+                    UpdateKeeperList(selectedSpeciesId);
+                }
+            }
+
+            //Aktualisiere Pfleger-Liste basierend auf ausgewählter Tierart
+            private void UpdateKeeperList(Guid speciesId)
+            {
+                currentKeeper.Items.Clear();
+                currentKeeper.Items.Add("(Kein Pfleger)");
+                // ÄNDERUNG: Filtere Keeper die für diese Species autorisiert sind
+                var authorizedKeepers = allKeepers
+                    .Where(k => k.AuthorizedSpecies.Any(s => s.Id == speciesId))
+                    .OrderBy(k => k.Name)
+                    .ToList();
+
+                if (authorizedKeepers.Any())
+                {
+                    foreach (var keeper in authorizedKeepers)
+                    {
+                        currentKeeper.Items.Add(keeper);
+                    }
+
+                    currentKeeper.DisplayMember = "Name";
+                    currentKeeper.Enabled = true; // ÄNDERUNG: Aktiviere ComboBox
+                    currentKeeper.SelectedIndex = 0;
+                }
+                else
+                {
+                    // ÄNDERUNG: Keine autorisierten Keeper vorhanden
+                    Label noKeeperLabel = new Label
+                    {
+                        Text = "(Keine autorisierten Pfleger)",
+                        ForeColor = Color.Gray
+                    };
+                    currentKeeper.Items.Add(noKeeperLabel.Text);
+                    currentKeeper.Enabled = false; // ÄNDERUNG: Deaktiviere wenn keine Keeper
+                    currentKeeper.SelectedIndex = 0;
+                }
             }
 
             private async void LoadSpecies()
@@ -467,10 +641,40 @@ namespace Zoorganize.Pages
                         return;
                     }
 
+                    // Validierung Tierart
                     if (speciesCombo.SelectedValue == null)
                     {
                         MessageBox.Show("Bitte wählen Sie eine Tierart aus.");
                         return;
+                    }
+
+                    // Validierung Alter
+                    int? parsedAge = ParseInt(age.Text);
+                    if (!string.IsNullOrWhiteSpace(age.Text) && (!parsedAge.HasValue || parsedAge < 0))
+                    {
+                        MessageBox.Show("Bitte geben Sie ein gültiges Alter ein (positive Zahl).", "Validierung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    // Validierung Gewicht
+                    double? parsedWeight = ParseDouble(weightKg.Text);
+                    if (!string.IsNullOrWhiteSpace(weightKg.Text) && (!parsedWeight.HasValue || parsedWeight <= 0))
+                    {
+                        MessageBox.Show("Bitte geben Sie ein gültiges Gewicht ein (positive Zahl).", "Validierung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    //Gehege-ID extrahieren (null wenn "(Kein Gehege)" ausgewählt)
+                    Guid? selectedEnclosureId = null;
+                    if (enclosureCombo.SelectedIndex > 0 && enclosureCombo.SelectedItem is AnimalEnclosure selectedEnclosure)
+                    {
+                        selectedEnclosureId = selectedEnclosure.Id;
+                    }
+
+                    Guid? selectedKeeperId = null;
+                    if (currentKeeper.SelectedIndex > 0 && currentKeeper.SelectedItem is Staff selectedKeeper)
+                    {
+                        selectedKeeperId = selectedKeeper.Id;
                     }
 
                     // Erstelle AddAnimalType mit allen Feldern
@@ -498,7 +702,9 @@ namespace Zoorganize.Pages
                         RequiresSeparation = requiresSeparation.Checked ? true : null,
                         BehavioralNotes = string.IsNullOrWhiteSpace(behavioralNotes.Text) ? null : behavioralNotes.Text,
 
-                        Keepers = new List<Guid>()
+                        KeeperId = selectedKeeperId ?? Guid.Empty,
+                        CurrentEnclosureId = selectedEnclosureId ?? Guid.Empty 
+
                     };
 
                     await _animalFunctions.AddAnimal(newAnimal);
@@ -535,9 +741,6 @@ namespace Zoorganize.Pages
             TextBox scientificName = new TextBox();
 
             // Haltung
-            TextBox minAreaPerAnimal = new TextBox();
-            TextBox minGroupSize = new TextBox();
-            TextBox maxGroupSize = new TextBox();
             CheckBox isSolitaryByNature = new CheckBox();
 
             // Klimaanforderungen
@@ -548,7 +751,7 @@ namespace Zoorganize.Pages
             CheckBox requiresOutdoorAccess = new CheckBox();
 
             // Sicherheitsmerkmale
-            TextBox requiredSecurityLevel = new TextBox();
+            ComboBox requiredSecurityLevel = new ComboBox();
             CheckBox isDangerous = new CheckBox();
             CheckBox requiresSpecialPermit = new CheckBox();
 
@@ -593,27 +796,6 @@ namespace Zoorganize.Pages
                 // Haltung Sektion
                 top += 10;
                 AddLabel("--- HALTUNG ---", leftLabel, top);
-                top += spacing;
-
-                AddLabel("Min. Fläche/Tier (m²):", leftLabel, top);
-                minAreaPerAnimal.Left = leftControl;
-                minAreaPerAnimal.Top = top;
-                minAreaPerAnimal.Width = controlWidth;
-                Controls.Add(minAreaPerAnimal);
-                top += spacing;
-
-                AddLabel("Min. Gruppengröße:", leftLabel, top);
-                minGroupSize.Left = leftControl;
-                minGroupSize.Top = top;
-                minGroupSize.Width = controlWidth;
-                Controls.Add(minGroupSize);
-                top += spacing;
-
-                AddLabel("Max. Gruppengröße:", leftLabel, top);
-                maxGroupSize.Left = leftControl;
-                maxGroupSize.Top = top;
-                maxGroupSize.Width = controlWidth;
-                Controls.Add(maxGroupSize);
                 top += spacing;
 
                 isSolitaryByNature.Text = "Einzelgänger";
@@ -668,10 +850,13 @@ namespace Zoorganize.Pages
                 AddLabel("--- SICHERHEIT ---", leftLabel, top);
                 top += spacing;
 
-                AddLabel("Sicherheitsstufe (1-5):", leftLabel, top);
+                AddLabel("Sicherheitsstufe:", leftLabel, top);
                 requiredSecurityLevel.Left = leftControl;
                 requiredSecurityLevel.Top = top;
                 requiredSecurityLevel.Width = controlWidth;
+                requiredSecurityLevel.DropDownStyle = ComboBoxStyle.DropDownList;
+                requiredSecurityLevel.Items.AddRange(Enum.GetNames(typeof(SecurityLevel)));
+                requiredSecurityLevel.SelectedIndex = 0;
                 Controls.Add(requiredSecurityLevel);
                 top += spacing;
 
@@ -753,9 +938,6 @@ namespace Zoorganize.Pages
                     {
                         Name = commonName.Text,
                         ScientificName = string.IsNullOrWhiteSpace(scientificName.Text) ? null : scientificName.Text,
-                        MinAreaPerAnimal = ParseDouble(minAreaPerAnimal.Text),
-                        MinGroupSize = ParseInt(minGroupSize.Text),
-                        MaxGroupSize = ParseInt(maxGroupSize.Text),
                         IsSolitaryByNature = isSolitaryByNature.Checked ? true : null,
                         MinTemperature = ParseDouble(minTemperature.Text),
                         MaxTemperature = ParseDouble(maxTemperature.Text),

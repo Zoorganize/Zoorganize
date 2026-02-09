@@ -5,7 +5,7 @@ using Zoorganize.Models.Api;
 
 namespace Zoorganize.Functions
 {
-    public class KeeperFunctions(AnimalFunctions animalFunctions, AppDbContext inContext)
+    public class StaffFunctions(AnimalFunctions animalFunctions, AppDbContext inContext)
     {
         //Funktionen, die sich mit Pflegern beschäftigen, z.B. Berechnung der Arbeitszeit, etc.
         //Funktionen, die ich für die Erstellung der Oberfläche hinsichtlich der Pfleger brauche, z.B. Anzeige von Informationen, etc.
@@ -14,14 +14,33 @@ namespace Zoorganize.Functions
         //Pfleger löschen
         public async Task<List<Staff>> GetStaff()
         {
-            return await inContext.Staff.ToListAsync();
+            return await inContext.Staff.Include(s => s.AuthorizedSpecies).ToListAsync();
         }
 
-        public async Task<List<Staff>> GetStaffByIds(List<Guid> staffList)
+        public async Task<Staff> GetStaffById(Guid staffId)
         {
-            return await inContext.Staff
-                .Where(s => staffList.Contains(s.Id))
-        .       ToListAsync();
+            var keeper =  await inContext.Staff.FirstOrDefaultAsync(s => s.Id == staffId);
+            if (keeper == null)
+            {
+                throw new KeyNotFoundException($"Staff with Id {staffId} not found");
+            }
+            return keeper;
+
+        }
+
+        public async Task<List<Staff>> GetKeepers()
+        {
+            var keepers = await inContext.Staff
+                .Where(s => s.JobRole == JobRole.Keeper)
+                .Include(s => s.AuthorizedSpecies)
+                .OrderBy(s => s.Name) 
+                .ToListAsync();
+
+            if (keepers == null)
+            {
+                throw new KeyNotFoundException($"Staff with Keeper Job not found");
+            }
+            return keepers;
         }
         public async Task<List<Staff>> AddPersonal(AddStaffType newStaff)
         {

@@ -1,15 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
-using System.Windows.Forms;
-using System.Xml.Linq;
+﻿using System.Data;
 using Zoorganize.Database.Models;
 using Zoorganize.Functions;
 using Zoorganize.Models.Api;
-using static Zoorganize.Pages.WorkersPage;
 
 namespace Zoorganize.Pages
 {
@@ -45,9 +37,11 @@ namespace Zoorganize.Pages
             //Zurück zum main menü
         private void button1_Click(object sender, EventArgs e)
         {
-            MainPage mainPage = new MainPage();
-            mainPage.Dock = DockStyle.Fill;
-            mainPage.TopLevel = false;
+            MainPage mainPage = new()
+            {
+                Dock = DockStyle.Fill,
+                TopLevel = false
+            };
             MainForm.MainPanel.Controls.Clear();
             MainForm.MainPanel.Controls.Add(mainPage);
             mainPage.Show();
@@ -60,6 +54,7 @@ namespace Zoorganize.Pages
             allRooms.AddRange(animalEnclosures);
             allRooms.AddRange(staffRooms);
             allRooms.AddRange(visitorRooms);
+
             using (DeleteBuildingsForm form = new DeleteBuildingsForm(allRooms, roomFunctions))
             {
                 if (form.ShowDialog() == DialogResult.OK)
@@ -101,13 +96,6 @@ namespace Zoorganize.Pages
             ShowRoomsByType(RoomType.StaffRoom);
         }
 
-        //Button funktion zum anzeigen
-        private void BuildingButton_Click(object sender, EventArgs e)
-        {
-            Button btn = sender as Button;
-            Room room = btn.Tag as Room;
-            MessageBox.Show($"Gebäude: {room.Name}\nTyp: {room.Type}");
-        }
 
         private void ShowRoomsByType(RoomType type)
         {
@@ -161,50 +149,59 @@ namespace Zoorganize.Pages
         }
         private void ShowRoomDetails(Room room)
         {
-            string details = $"Name: {room.Name}\n";
-            details += $"Standort: {room.Location ?? "Nicht angegeben"}\n";
-            details += $"Beschreibung: {room.Description ?? "Keine"}\n";
-            details += $"Fläche: {room.AreaInSquareMeters?.ToString() ?? "Nicht angegeben"} m²\n";
-            details += $"Status: {room.Status}\n\n";
+            string details = $"Name: {room.Name}\n" +
+                $"Standort: {room.Location ?? "N/A"}\n" +
+                $"Beschreibung: {room.Description ?? "N/A"}\n" +
+                $"Fläche: {(room.AreaInSquareMeters.HasValue ? $"{room.AreaInSquareMeters:F2} m²" : "N/A")}\n" +
+                $"Status: {room.Status}\n";
 
             // Spezifische Details basierend auf Typ
             if (room is AnimalEnclosure enclosure)
             {
-                details += "═══ GEHEGE-DETAILS ═══\n";
-                details += $"Kapazität: {enclosure.MaxCapacity} Tiere\n";
-                details += $"Außengehege: {(enclosure.IsOutdoor ? "Ja" : "Nein")}\n";
-                details += $"Temperaturkontrolle: {(enclosure.TemperatureControlled ? "Ja" : "Nein")}\n";
-                details += $"Temperatur: {enclosure.MinTemperature}°C - {enclosure.MaxTemperature}°C\n";
-                details += $"Sicherheitsstufe: {enclosure.SecurityLevel}\n";
-                details += $"Aktuelle Tiere: {enclosure.Animals?.Count ?? 0}\n";
+                details += $"Kapazität: {enclosure.MaxCapacity} Tiere\n" +
+                    $"Außengehege: {(enclosure.IsOutdoor ? "Ja" : "Nein")}\n" +
+                    $"Temperaturkontrolle: {(enclosure.TemperatureControlled ? "Ja" : "Nein")}\n";
 
+                // Temperatur nur anzeigen wenn vorhanden
+                if (enclosure.MinTemperature > 0 && enclosure.MaxTemperature > 0)
+                {
+                    details += $"Temperatur: {enclosure.MinTemperature}°C - {enclosure.MaxTemperature}°C\n";
+                }
+
+                details += $"Sicherheitsstufe: {enclosure.SecurityLevel}\n" +
+                    $"Aktuelle Tiere: {enclosure.Animals?.Count ?? 0}\n";
+
+                // Tiere im Gehege
                 if (enclosure.Animals?.Any() == true)
                 {
-                    details += "\nTiere im Gehege:\n";
-                    details += string.Join("\n", enclosure.Animals.Select(a => $"  • {a.Name}"));
+                    details += $"Tiere: {string.Join(", ", enclosure.Animals.Select(a => a.Name))}\n";
+                }
+
+                // Erlaubte Tierarten
+                if (enclosure.AllowedSpecies?.Any() == true)
+                {
+                    details += $"Erlaubte Tierarten: {string.Join(", ", enclosure.AllowedSpecies.Select(s => s.CommonName))}\n";
                 }
             }
             else if (room is StaffRooms staffRoom)
             {
-                details += "═══ MITARBEITERRAUM-DETAILS ═══\n";
                 details += $"Autorisiertes Personal: {staffRoom.AuthorizedStaff?.Count ?? 0}\n";
 
+                // Zugangsberechtigte Mitarbeiter
                 if (staffRoom.AuthorizedStaff?.Any() == true)
                 {
-                    details += "\nZugang für:\n";
-                    details += string.Join("\n", staffRoom.AuthorizedStaff.Select(s => $"  • {s.Name}"));
+                    details += $"Zugang für: {string.Join(", ", staffRoom.AuthorizedStaff.Select(s => s.Name))}\n";
                 }
             }
             else if (room is VisitorRoom visitorRoom)
             {
-                details += "═══ BESUCHERRAUM-DETAILS ═══\n";
-                details += $"Öffnungszeiten: {visitorRoom.OpeningHours}\n";
-                details += $"Mitarbeiter: {visitorRoom.Staff?.Count ?? 0}\n";
+                details += $"Öffnungszeiten: {visitorRoom.OpeningHours}\n" +
+                    $"Mitarbeiter: {visitorRoom.Staff?.Count ?? 0}\n";
 
+                // Zugewiesene Mitarbeiter
                 if (visitorRoom.Staff?.Any() == true)
                 {
-                    details += "\nMitarbeiter:\n";
-                    details += string.Join("\n", visitorRoom.Staff.Select(s => $"  • {s.Name}"));
+                    details += $"Personal: {string.Join(", ", visitorRoom.Staff.Select(s => s.Name))}\n";
                 }
             }
 
@@ -221,166 +218,281 @@ namespace Zoorganize.Pages
         //Form für die Eingabe der neuen Gebäude Informationen
         public partial class AddBuildingForm : Form
         {
-            private readonly RoomFunctions _roomFunctions;
-            public RoomType CreatedRoomType { get; private set; }
-            private TextBox txtName;
-            private TextBox txtLocation;
-            private TextBox txtDescription;
-            private TextBox txtArea;
-            private RadioButton rbEnclosure;
-            private RadioButton rbVisitor;
-            private RadioButton rbWorker;
-            private Button btnSubmit;
-
-            public AddBuildingForm(RoomFunctions roomFunctions)
-            {
-                _roomFunctions = roomFunctions;
-                InitializeForm();
-            }
-
-            private void InitializeForm()
-            {
-                Text = "Raum hinzufügen";
-                Width = 400;
-                Height = 400;
-                FormBorderStyle = FormBorderStyle.FixedDialog;
-                MaximizeBox = false;
-                StartPosition = FormStartPosition.CenterParent;
-
-                int yPos = 20;
-
-                // Name
-                Label lblName = new Label { Text = "Name:", Left = 20, Top = yPos, AutoSize = true };
-                txtName = new TextBox { Left = 120, Top = yPos, Width = 240 };
-                Controls.Add(lblName);
-                Controls.Add(txtName);
-                yPos += 35;
-
-                // Location
-                Label lblLocation = new Label { Text = "Standort:", Left = 20, Top = yPos, AutoSize = true };
-                txtLocation = new TextBox { Left = 120, Top = yPos, Width = 240 };
-                Controls.Add(lblLocation);
-                Controls.Add(txtLocation);
-                yPos += 35;
-
-                // Description
-                Label lblDescription = new Label { Text = "Beschreibung:", Left = 20, Top = yPos, AutoSize = true };
-                txtDescription = new TextBox { Left = 120, Top = yPos, Width = 240, Height = 60, Multiline = true };
-                Controls.Add(lblDescription);
-                Controls.Add(txtDescription);
-                yPos += 70;
-
-                // Area
-                Label lblArea = new Label { Text = "Fläche (m²):", Left = 20, Top = yPos, AutoSize = true };
-                txtArea = new TextBox { Left = 120, Top = yPos, Width = 100 };
-                Controls.Add(lblArea);
-                Controls.Add(txtArea);
-                yPos += 35;
-
-                // Type Selection
-                Label lblType = new Label { Text = "Typ:", Left = 20, Top = yPos, AutoSize = true, Font = new Font(Font, FontStyle.Bold) };
-                Controls.Add(lblType);
-                yPos += 25;
-
-                rbEnclosure = new RadioButton { Text = "Tiergehege", Left = 20, Top = yPos, AutoSize = true, Checked = true };
-                Controls.Add(rbEnclosure);
-                yPos += 25;
-
-                rbVisitor = new RadioButton { Text = "Besucherraum", Left = 20, Top = yPos, AutoSize = true };
-                Controls.Add(rbVisitor);
-                yPos += 25;
-
-                rbWorker = new RadioButton { Text = "Mitarbeiterraum", Left = 20, Top = yPos, AutoSize = true };
-                Controls.Add(rbWorker);
-                yPos += 40;
-
-                // Submit Button
-                btnSubmit = new Button
-                {
-                    Text = "Raum erstellen",
-                    Left = 120,
-                    Top = yPos,
-                    Width = 150,
-                    Height = 35
-                };
-                btnSubmit.Click += btnSubmit_Click;
-                Controls.Add(btnSubmit);
-            }
             
+                private readonly RoomFunctions _roomFunctions;
+                public RoomType CreatedRoomType { get; private set; }
 
-            //Fügt das erstellte object in die Liste der Gebäude ein, abhängig von der Auswahl des Typs
-            private async void btnSubmit_Click(object sender, EventArgs e)
-            {
-                try
+                private TextBox txtName;
+                private TextBox txtLocation;
+                private TextBox txtDescription;
+                private TextBox txtArea;
+
+                // Zusätzliche Felder für AnimalEnclosure
+                private NumericUpDown numMaxCapacity;
+                private CheckBox chkIsOutdoor;
+                private ComboBox cmbSecurityLevel;
+
+                // Zusätzliches Feld für VisitorRoom
+                private TextBox txtOpeningHours;
+
+                private RadioButton rbEnclosure;
+                private RadioButton rbVisitor;
+                private RadioButton rbWorker;
+                private Button btnSubmit;
+
+                // Panel für spezifische Felder
+                private Panel pnlEnclosureDetails;
+                private Panel pnlVisitorDetails;
+
+                public AddBuildingForm(RoomFunctions roomFunctions)
                 {
-                    if (string.IsNullOrWhiteSpace(txtName.Text))
-                    {
-                        MessageBox.Show("Bitte geben Sie einen Namen ein.", "Validierung");
-                        return;
-                    }
+                    _roomFunctions = roomFunctions;
+                    InitializeForm();
+                }
 
-                    double? area = null;
-                    if (!string.IsNullOrWhiteSpace(txtArea.Text))
-                    {
-                        if (!double.TryParse(txtArea.Text, out var parsedArea))
-                        {
-                            MessageBox.Show("Bitte geben Sie eine gültige Fläche ein.", "Validierung");
-                            return;
-                        }
-                        area = parsedArea;
-                    }
+                private void InitializeForm()
+                {
+                    Text = "Raum hinzufügen";
+                    Width = 450;
+                    Height = 550;
+                    FormBorderStyle = FormBorderStyle.FixedDialog;
+                    MaximizeBox = false;
+                    StartPosition = FormStartPosition.CenterParent;
+                    AutoScroll = true;
 
-                    // Typ bestimmen und entsprechenden Room erstellen
+                    int yPos = 20;
+                    int leftLabel = 20;
+                    int leftControl = 150;
+                    int controlWidth = 260;
+
+                    // Name
+                    Label lblName = new Label { Text = "Name:", Left = leftLabel, Top = yPos, Width = 120 };
+                    txtName = new TextBox { Left = leftControl, Top = yPos, Width = controlWidth };
+                    Controls.Add(lblName);
+                    Controls.Add(txtName);
+                    yPos += 35;
+
+                    // Location
+                    Label lblLocation = new Label { Text = "Standort:", Left = leftLabel, Top = yPos, Width = 120 };
+                    txtLocation = new TextBox { Left = leftControl, Top = yPos, Width = controlWidth };
+                    Controls.Add(lblLocation);
+                    Controls.Add(txtLocation);
+                    yPos += 35;
+
+                    // Description
+                    Label lblDescription = new Label { Text = "Beschreibung:", Left = leftLabel, Top = yPos, Width = 120 };
+                    txtDescription = new TextBox { Left = leftControl, Top = yPos, Width = controlWidth, Height = 60, Multiline = true };
+                    Controls.Add(lblDescription);
+                    Controls.Add(txtDescription);
+                    yPos += 70;
+
+                    // Area
+                    Label lblArea = new Label { Text = "Fläche (m²):", Left = leftLabel, Top = yPos, Width = 120 };
+                    txtArea = new TextBox { Left = leftControl, Top = yPos, Width = 100 };
+                    Controls.Add(lblArea);
+                    Controls.Add(txtArea);
+                    yPos += 35;
+
+                    // Type Selection (RadioButtons = Kategorie/Type des Raums)
+                    Label lblType = new Label { Text = "Typ:", Left = leftLabel, Top = yPos, Width = 120, Font = new Font(Font, FontStyle.Bold) };
+                    Controls.Add(lblType);
+                    yPos += 25;
+
+                    rbEnclosure = new RadioButton { Text = "Tiergehege", Left = leftLabel, Top = yPos, AutoSize = true, Checked = true };
+                    rbEnclosure.CheckedChanged += RoomType_CheckedChanged;
+                    Controls.Add(rbEnclosure);
+                    yPos += 25;
+
+                    rbVisitor = new RadioButton { Text = "Besucherraum", Left = leftLabel, Top = yPos, AutoSize = true };
+                    rbVisitor.CheckedChanged += RoomType_CheckedChanged;
+                    Controls.Add(rbVisitor);
+                    yPos += 25;
+
+                    rbWorker = new RadioButton { Text = "Mitarbeiterraum", Left = leftLabel, Top = yPos, AutoSize = true };
+                    rbWorker.CheckedChanged += RoomType_CheckedChanged;
+                    Controls.Add(rbWorker);
+                    yPos += 40;
+
+                    // Panel für Gehege-spezifische Felder
+                    pnlEnclosureDetails = new Panel
+                    {
+                        Left = 0,
+                        Top = yPos,
+                        Width = 430,
+                        Height = 150,
+                        BorderStyle = BorderStyle.FixedSingle,
+                        Visible = true
+                    };
+
+                    int panelY = 10;
+
+                    Label lblMaxCapacity = new Label { Text = "Max. Kapazität:", Left = 20, Top = panelY, Width = 120 };
+                    numMaxCapacity = new NumericUpDown { Left = 150, Top = panelY, Width = 100, Minimum = 1, Maximum = 1000, Value = 10 };
+                    pnlEnclosureDetails.Controls.Add(lblMaxCapacity);
+                    pnlEnclosureDetails.Controls.Add(numMaxCapacity);
+                    panelY += 35;
+
+                    chkIsOutdoor = new CheckBox { Text = "Außengehege", Left = 20, Top = panelY, AutoSize = true };
+                    pnlEnclosureDetails.Controls.Add(chkIsOutdoor);
+                    panelY += 30;
+
+                    Label lblSecurity = new Label { Text = "Sicherheitsstufe:", Left = 20, Top = panelY, Width = 120 };
+                    cmbSecurityLevel = new ComboBox { Left = 150, Top = panelY, Width = 200, DropDownStyle = ComboBoxStyle.DropDownList };
+                    cmbSecurityLevel.Items.AddRange(Enum.GetNames(typeof(SecurityLevel)));
+                    cmbSecurityLevel.SelectedIndex = 0;
+                    pnlEnclosureDetails.Controls.Add(lblSecurity);
+                    pnlEnclosureDetails.Controls.Add(cmbSecurityLevel);
+
+                    Controls.Add(pnlEnclosureDetails);
+
+                    // Panel für Besucherraum-spezifische Felder
+                    pnlVisitorDetails = new Panel
+                    {
+                        Left = 0,
+                        Top = yPos,
+                        Width = 430,
+                        Height = 80,
+                        BorderStyle = BorderStyle.FixedSingle,
+                        Visible = false
+                    };
+
+                    panelY = 10;
+
+                    Label lblOpeningHours = new Label { Text = "Öffnungszeiten:", Left = 20, Top = panelY, Width = 120 };
+                    txtOpeningHours = new TextBox { Left = 150, Top = panelY, Width = 200, Text = "08:00-18:00" };
+                    pnlVisitorDetails.Controls.Add(lblOpeningHours);
+                    pnlVisitorDetails.Controls.Add(txtOpeningHours);
+
+                    Controls.Add(pnlVisitorDetails);
+
+                    yPos += 160;
+
+                    // Submit Button
+                    btnSubmit = new Button
+                    {
+                        Text = "Raum erstellen",
+                        Left = 150,
+                        Top = yPos,
+                        Width = 150,
+                        Height = 35
+                    };
+                    btnSubmit.Click += btnSubmit_Click;
+                    Controls.Add(btnSubmit);
+                }
+
+                private void RoomType_CheckedChanged(object sender, EventArgs e)
+                {
                     if (rbEnclosure.Checked)
                     {
-                        var addEnclosureType = new AddAnimalEnclosureType
-                        {
-                            Name = txtName.Text,
-                            Location = txtLocation.Text,
-                            Description = txtDescription.Text,
-                            AreaInSquareMeters = area ?? 100,
-                            MaxCapacity = 10, // Default-Werte
-                            IsOutdoor = false,
-                            SecurityLevel = 0
-                        };
-
-                        await _roomFunctions.AddAnimalEnclosure(addEnclosureType);
-                        CreatedRoomType = RoomType.AnimalEnclosure;
+                        pnlEnclosureDetails.Visible = true;
+                        pnlVisitorDetails.Visible = false;
                     }
                     else if (rbVisitor.Checked)
                     {
-                        var addVisitorRoomType = new AddVisitorRoomType
-                        {
-                            Name = txtName.Text,
-                            Location = txtLocation.Text,
-                            Description = txtDescription.Text,
-                            AreaInSquareMeters = area,
-                            OpeningHours = "08:00-18:00" // Default
-                        };
-
-                        await _roomFunctions.AddVisitorRoom(addVisitorRoomType);
-                        CreatedRoomType = RoomType.VisitorRoom;
+                        pnlEnclosureDetails.Visible = false;
+                        pnlVisitorDetails.Visible = true;
                     }
                     else // rbWorker
                     {
-                        var addStaffRoomType = new AddStaffRoomType
-                        {
-                            Name = txtName.Text,
-                            Location = txtLocation.Text,
-                            Description = txtDescription.Text,
-                            AreaInSquareMeters = area
-                        };
-
-                        await _roomFunctions.AddStaffRoom(addStaffRoomType);
-                        CreatedRoomType = RoomType.StaffRoom;
+                        pnlEnclosureDetails.Visible = false;
+                        pnlVisitorDetails.Visible = false;
                     }
-
-                    DialogResult = DialogResult.OK;
-                    Close();
                 }
-                catch (Exception ex)
+
+                private async void btnSubmit_Click(object sender, EventArgs e)
                 {
-                    MessageBox.Show($"Fehler beim Erstellen: {ex.Message}", "Fehler");
+                    try
+                    {
+                        // Validierung Name
+                        if (string.IsNullOrWhiteSpace(txtName.Text))
+                        {
+                            MessageBox.Show("Bitte geben Sie einen Namen ein.", "Validierung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return;
+                        }
+
+                        // Validierung Fläche
+                        double? area = null;
+                        if (!string.IsNullOrWhiteSpace(txtArea.Text))
+                        {
+                            if (!double.TryParse(txtArea.Text, out var parsedArea) || parsedArea <= 0)
+                            {
+                                MessageBox.Show("Bitte geben Sie eine gültige Fläche ein (positive Zahl).", "Validierung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                return;
+                            }
+                            area = parsedArea;
+                        }
+
+                        // ÄNDERUNG: Type wird aus RadioButton-Auswahl bestimmt
+                        // 0 = AnimalEnclosure, 1 = VisitorRoom, 2 = StaffRoom
+                        int typeIndex = rbEnclosure.Checked ? 0 : rbVisitor.Checked ? 1 : 2;
+
+                        // Typ bestimmen und entsprechenden Room erstellen
+                        if (rbEnclosure.Checked)
+                        {
+                            if (!area.HasValue)
+                            {
+                                MessageBox.Show("Bitte geben Sie eine Fläche für das Gehege ein.", "Validierung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                return;
+                            }
+
+                            var addEnclosureType = new AddAnimalEnclosureType
+                            {
+                                Name = txtName.Text,
+                                Location = string.IsNullOrWhiteSpace(txtLocation.Text) ? null : txtLocation.Text,
+                                Description = string.IsNullOrWhiteSpace(txtDescription.Text) ? null : txtDescription.Text,
+                                AreaInSquareMeters = area.Value,
+                                MaxCapacity = (int)numMaxCapacity.Value,
+                                IsOutdoor = chkIsOutdoor.Checked,
+                                SecurityLevel = cmbSecurityLevel.SelectedIndex,
+                                Type = typeIndex // ÄNDERUNG: 0 für AnimalEnclosure
+                            };
+
+                            await _roomFunctions.AddAnimalEnclosure(addEnclosureType);
+                            CreatedRoomType = RoomType.AnimalEnclosure;
+                        }
+                        else if (rbVisitor.Checked)
+                        {
+                            if (string.IsNullOrWhiteSpace(txtOpeningHours.Text))
+                            {
+                                MessageBox.Show("Bitte geben Sie Öffnungszeiten ein.", "Validierung", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                return;
+                            }
+
+                            var addVisitorRoomType = new AddVisitorRoomType
+                            {
+                                Name = txtName.Text,
+                                Location = string.IsNullOrWhiteSpace(txtLocation.Text) ? null : txtLocation.Text,
+                                Description = string.IsNullOrWhiteSpace(txtDescription.Text) ? null : txtDescription.Text,
+                                AreaInSquareMeters = area,
+                                OpeningHours = txtOpeningHours.Text,
+                                Type = typeIndex // ÄNDERUNG: 1 für VisitorRoom
+                            };
+
+                            await _roomFunctions.AddVisitorRoom(addVisitorRoomType);
+                            CreatedRoomType = RoomType.VisitorRoom;
+                        }
+                        else // rbWorker
+                        {
+                            var addStaffRoomType = new AddStaffRoomType
+                            {
+                                Name = txtName.Text,
+                                Location = string.IsNullOrWhiteSpace(txtLocation.Text) ? null : txtLocation.Text,
+                                Description = string.IsNullOrWhiteSpace(txtDescription.Text) ? null : txtDescription.Text,
+                                AreaInSquareMeters = area,
+                                Type = typeIndex // ÄNDERUNG: 2 für StaffRoom
+                            };
+
+                            await _roomFunctions.AddStaffRoom(addStaffRoomType);
+                            CreatedRoomType = RoomType.StaffRoom;
+                        }
+
+                        DialogResult = DialogResult.OK;
+                        Close();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Fehler beim Erstellen: {ex.Message}", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
         }
@@ -556,5 +668,5 @@ namespace Zoorganize.Pages
         }
     }
 
-}
+
 

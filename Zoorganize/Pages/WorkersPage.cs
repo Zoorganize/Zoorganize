@@ -14,18 +14,21 @@ namespace Zoorganize.Pages
     
     public partial class WorkersPage : Form
     {
-        private readonly KeeperFunctions keeperFunctions;
+        private readonly StaffFunctions staffFunctions;
+        private readonly AnimalFunctions animalFunctions;
         List<Staff> worker = [];
-        public WorkersPage(KeeperFunctions keeperFunctions)
+        public WorkersPage(StaffFunctions staffFunctions, AnimalFunctions animalFunctions)
         {
-            this.keeperFunctions = keeperFunctions;
+            this.staffFunctions = staffFunctions;
+            this.animalFunctions = animalFunctions;
             InitializeComponent();
             LoadWorkers();
+           
         }
 
         private async void LoadWorkers()
         {
-            worker = await keeperFunctions.GetStaff();
+            worker = await staffFunctions.GetStaff();
             RefreshWorkerDisplay();
         }
 
@@ -48,9 +51,11 @@ namespace Zoorganize.Pages
 
         private void button1_Click(object sender, EventArgs e)
         {
-            MainPage mainPage = new MainPage();
-            mainPage.Dock = DockStyle.Fill;
-            mainPage.TopLevel = false;
+            MainPage mainPage = new()
+            {
+                Dock = DockStyle.Fill,
+                TopLevel = false
+            };
             MainForm.MainPanel.Controls.Clear();
             MainForm.MainPanel.Controls.Add(mainPage);
             mainPage.Show();
@@ -64,7 +69,7 @@ namespace Zoorganize.Pages
                 {
                     foreach (Staff worker in form.workertodelete)
                     {
-                        await keeperFunctions.DeletePersonal(worker.Id);
+                        await staffFunctions.DeletePersonal(worker.Id);
                         this.worker.Remove(worker);
                     }
                     RefreshWorkerDisplay();
@@ -74,7 +79,9 @@ namespace Zoorganize.Pages
 
         private async void AddWorker_Click(object sender, EventArgs e)
         {
-            using (var dlg = new WorkerForm())
+            List<Species> availableSpecies = await animalFunctions.GetSpecies();
+
+            using (var dlg = new WorkerForm(availableSpecies))
             {
                 dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
                 dlg.ShowInTaskbar = false;
@@ -82,7 +89,7 @@ namespace Zoorganize.Pages
 
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    worker = await keeperFunctions.AddPersonal(dlg.newStaff);
+                    worker = await staffFunctions.AddPersonal(dlg.newStaff);
                     RefreshWorkerDisplay();
                 }
             }
@@ -92,22 +99,35 @@ namespace Zoorganize.Pages
         {
             if ((sender as Button)?.Tag is Staff staff)
             {
+                string authorizedSpeciesText = "";
+                if (staff.JobRole == JobRole.Keeper)
+                {
+                    authorizedSpeciesText = staff.AuthorizedSpecies.Count > 0
+                        ? $"Autorisierte Tierarten: {string.Join(", ", staff.AuthorizedSpecies.Select(s => s.CommonName))}\n"
+                        : "Autorisierte Tierarten: Keine\n";
+                }
+
+                string exitDateText = !staff.IsActive && staff.ExitDate.HasValue
+                    ? $"Austrittsdatum: {staff.ExitDate.Value:dd.MM.yyyy}\n"
+                    :"";
+
                 MessageBox.Show($"Name: {staff.Name}\n" +
                     $"Geschlecht: {staff.Sex}\n" +
                     $"Position: {staff.JobRole}\n" +
                     $"Anstellungsart: {staff.EmploymentType}\n" +
-                    $"Jahresgehalt: {staff.YearlySalary}\n" +
+                    $"Jahresgehalt: {staff.YearlySalary }\n" +
                     $"Kontakt: {staff.ContactInfo ?? "N/A"}\n" +
                     $"Adresse: {staff.Address ?? "N/A"}\n" +
                     $"Einstellungsdatum: {staff.HireDate}\n" +
-                    $"Austrittsdatum: {staff.ExitDate?.ToString() ?? "N/A"}\n" +
+                    exitDateText +
                     $"Notizen: {staff.Notes ?? "N/A"}\n" +
-                    $"Aktiv: {(staff.IsActive ? "Ja" : "Nein")}");
+                    $"Aktiv: {(staff.IsActive ? "Ja" : "Nein")}\n" +
+                    authorizedSpeciesText);
             }
         }
 
 
-        //ergänzen mit den anderen attributen
+        
         class WorkerForm : Form
         {
             TextBox name = new TextBox();
@@ -118,15 +138,23 @@ namespace Zoorganize.Pages
             TextBox contactInfo = new TextBox();
             TextBox address = new TextBox();
             DateTimePicker hireDate = new DateTimePicker();
+            DateTimePicker exitDate = new DateTimePicker();
+            CheckBox hasExitDate = new CheckBox();
+            Label lblExitDate = new Label();
             TextBox notes = new TextBox();
             CheckBox isActive = new CheckBox();
+            CheckedListBox speciesList = new CheckedListBox();
             Button submit = new Button();
+
+            private List<Species> availableSpecies;
             public AddStaffType newStaff { get; private set; }
-            public WorkerForm()
+            public WorkerForm(List<Species> species)
             {
+                this.availableSpecies = species;
+
                 Text = "Arbeiter Hinzufügen";
                 Width = 350;
-                Height = 550;
+                Height = 750;
                 AutoScroll = true;
 
                 int top = 20;
@@ -215,6 +243,52 @@ namespace Zoorganize.Pages
                 Controls.Add(hireDate);
                 top += spacing;
 
+                // Austrittsdatum hinzugefügt
+                hasExitDate.Text = "Austrittsdatum festlegen";
+                hasExitDate.Left = left;
+                hasExitDate.Top = top;
+                hasExitDate.Width = 200;
+                hasExitDate.CheckedChanged += HasExitDate_CheckedChanged; // Event-Handler für Sichtbarkeitssteuerung
+                Controls.Add(hasExitDate);
+                top += 25;
+
+                lblExitDate.Text = "Austritt:";
+                lblExitDate.Left = left;
+                lblExitDate.Top = top;
+                lblExitDate.Width = 100;
+                lblExitDate.Visible = false; // Initial versteckt
+
+                exitDate.Left = left + 110;
+                exitDate.Top = top;
+                exitDate.Width = 200;
+                exitDate.Format = DateTimePickerFormat.Short;
+                exitDate.Visible = false; // Initial versteckt
+
+                Controls.Add(lblExitDate);
+                Controls.Add(exitDate);
+                top += spacing;
+
+                // Autorisierte Tierarten
+                Label lblSpecies = new Label { Text = "Autorisierte Tierarten:", Left = left, Top = top, Width = 300 };
+                Controls.Add(lblSpecies);
+                top += 25;
+
+                speciesList.Left = left;
+                speciesList.Top = top;
+                speciesList.Width = 300;
+                speciesList.Height = 120;
+                speciesList.CheckOnClick = true; // Direktes Anklicken zum Markieren
+                speciesList.DisplayMember = "CommonName";
+
+                // Alle verfügbaren Tierarten zur Liste hinzufügen
+                foreach (var avaSpec in availableSpecies)
+                {
+                    speciesList.Items.Add(avaSpec); // Das ganze Species-Objekt wird hinzugefügt
+                } 
+
+                Controls.Add(speciesList);
+                top += 130;
+
                 // Notizen
                 Label lblNotes = new Label { Text = "Notizen:", Left = left, Top = top, Width = 100 };
                 notes.Left = left + 110;
@@ -242,6 +316,15 @@ namespace Zoorganize.Pages
                 submit.Click += Submit_Click;
                 Controls.Add(submit);
             }
+
+            // Event-Handler für Austrittsdatum-Sichtbarkeit
+            private void HasExitDate_CheckedChanged(object? sender, EventArgs e)
+            {
+                // Zeige oder verstecke Label und DatePicker basierend auf Checkbox-Status
+                lblExitDate.Visible = hasExitDate.Checked;
+                exitDate.Visible = hasExitDate.Checked;
+            }
+
             private void Submit_Click(object? sender, EventArgs e)
             {
                 if (string.IsNullOrWhiteSpace(name.Text))
@@ -249,19 +332,39 @@ namespace Zoorganize.Pages
                     MessageBox.Show("Bitte geben Sie einen Namen ein.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
+
+                float? salary = null;
+                if (!string.IsNullOrWhiteSpace(yearlySalary.Text))
+                {
+                    if (!float.TryParse(yearlySalary.Text, out var parsedSalary) || parsedSalary < 0)
+                    {
+                        MessageBox.Show("Bitte geben Sie ein gültiges Gehalt ein (positive Zahl).", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    salary = parsedSalary;
+                }
+
+                // Sammle alle ausgewählten Tierarten-IDs
+                List<Guid> authorizedSpeciesIds = new List<Guid>();
+
+                foreach (Species species in speciesList.CheckedItems)
+                {
+                    authorizedSpeciesIds.Add(species.Id);
+                }
+
                 newStaff = new AddStaffType
                 {
                     Name = name.Text,
                     Sex = sex.SelectedIndex,
                     JobRole = jobRole.SelectedIndex,
                     EmploymentType = employmentType.SelectedIndex,
-                    YearlySalary = float.TryParse(yearlySalary.Text, out var salary) ? salary : null,
+                    YearlySalary = salary,
                     ContactInfo = string.IsNullOrWhiteSpace(contactInfo.Text) ? null : contactInfo.Text,
                     Address = string.IsNullOrWhiteSpace(address.Text) ? null : address.Text,
                     HireDate = hireDate.Value.ToString("yyyy-MM-dd"),
                     Notes = string.IsNullOrWhiteSpace(notes.Text) ? null : notes.Text,
                     IsActive = isActive.Checked,
-                    AuthorizedSpecies = new List<Guid>() // Hier könntest du später eine Auswahl hinzufügen
+                    AuthorizedSpecies = authorizedSpeciesIds  // Tatsächliche IDs statt leerer Liste
                 };
 
                 DialogResult = DialogResult.OK;
@@ -280,14 +383,28 @@ namespace Zoorganize.Pages
             public DeleteWorkersForm(List<Staff> worker)
             {
                 this.addedworkers = worker;
+
+                this.Text = "Mitarbeiter löschen";
+                this.Width = 400;
+                this.Height = 500;
+                this.FormBorderStyle = FormBorderStyle.FixedDialog;
+                this.StartPosition = FormStartPosition.CenterParent;
+
                 flowWorkers.Top = 20;
                 flowWorkers.Left = 20;
+                flowWorkers.Width = 340;
+                flowWorkers.Height = 350;
+
                 btnDelete.Top = flowWorkers.Bottom + 20;
                 btnDelete.Left = 20;
-                btnDelete.Text = "Delete";
+                btnDelete.Text = "Löschen"; 
+                btnDelete.Width = 100;
+
                 btnCancel.Top = flowWorkers.Bottom + 20;
                 btnCancel.Left = btnDelete.Right + 20;
-                btnCancel.Text = "Cancel";
+                btnCancel.Text = "Abbrechen";
+                btnCancel.Width = 100;
+
                 BuildCheckboxList();
                 Controls.Add(flowWorkers);
                 Controls.Add(btnDelete);
@@ -309,7 +426,7 @@ namespace Zoorganize.Pages
                     CheckBox cb = new CheckBox();
                     cb.Text = $"{staff.Name} ({staff.JobRole})";
                     cb.AutoSize = true;
-                    cb.Tag = staff; // store reference
+                    cb.Tag = staff; 
 
                     flowWorkers.Controls.Add(cb);
 
@@ -333,8 +450,17 @@ namespace Zoorganize.Pages
                     return;
                 }
 
-                DialogResult = DialogResult.OK;
-                Close();
+                var result = MessageBox.Show(
+                    $"Möchten Sie wirklich {workertodelete.Count} Mitarbeiter löschen?",
+                    "Löschen bestätigen",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (result == DialogResult.Yes)
+                {
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
             }
 
             private void btnCancel_Click(object sender, EventArgs e)

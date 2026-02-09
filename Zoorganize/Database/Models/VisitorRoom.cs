@@ -3,6 +3,6 @@
     public class VisitorRoom : Room
     {
         public required string OpeningHours { get; set; }
-            public List<Staff> Staff { get; set; } = [];
+        public List<Staff> Staff { get; set; } = [];
     }
 }
