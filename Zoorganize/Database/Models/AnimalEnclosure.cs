@@ -1,18 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Zoorganize.Database.Models
+﻿namespace Zoorganize.Database.Models
 {
-    public class AnimalEnclosure
+    public class AnimalEnclosure : Room
     {
-        public Guid Id { get; set; }
-        public string Name { get; set; }
-        public string? Location { get; set; }
-        public string? Description { get; set; }
-        public GehegeStatus Status { get; set; }
-
-        public double AreaInSquareMeters { get; set; }
         public bool IsOutdoor { get; set; }
         public List<Animal> Animals { get; set; } = [];
         public int MaxCapacity { get; set; }
@@ -35,8 +24,8 @@ namespace Zoorganize.Database.Models
         public bool HasClimbingStructures { get; set; }
         public bool HasShelter { get; set; }
 
-        //TODO: Implement AllowedSpecies 
-        //public List<Species> AllowedSpecies { get; set; } = [];
+         
+        public List<Species> AllowedSpecies { get; set; } = [];
     }
 
     public enum SecurityLevel
@@ -46,14 +35,5 @@ namespace Zoorganize.Database.Models
         High,
         VeryHigh
     }
-    public enum GehegeStatus
-    {
-        Available,
-        UnderMaintenance,
-        Closed,
-        Renovation
-    }
+    
 }
-//Bescuher und Staff Räume => 
-//Besucher haben öffnungszeiten und Mitarbeiter
-//Staff Räume haben nur Mitarbeiter Zugang

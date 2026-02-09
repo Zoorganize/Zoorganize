@@ -19,9 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Database\Zoorganize.db">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <Folder Include="Migrations\" />
+    <Folder Include="Models\Dto\" />
   </ItemGroup>
 
 </Project>

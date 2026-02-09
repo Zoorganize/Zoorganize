@@ -1,36 +1,97 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Microsoft.Extensions.Options;
 using Zoorganize.Database.Models;
 
 namespace Zoorganize.Database
 {
     public class AppDbContext : DbContext
     {
-        public DbSet<Keeper> Pfleger { get; set; }
+        public DbSet<Staff> Staff { get; set; }
         public DbSet<Animal> Animals { get; set; }
         public DbSet<VeterinaryAppointment> VeterinaryAppointments { get; set; }
         public DbSet<ExternalZooStay> ExternalZooStays { get; set; }
         public DbSet<Species> Species { get; set; }
         public DbSet<AnimalEnclosure> AnimalEnclosures { get; set; }
+        public DbSet<Room> Rooms { get; set; }
+        public DbSet<Zoo> Zoos { get; set; }
+        public DbSet<StaffRooms> StaffRooms { get; set; }
+        public DbSet<VisitorRoom> VisitorRooms { get; set; }
 
         //TODO: OnModelCreating for relationships plus migrations
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Animal>().HasMany(a => a.VeterinaryAppointments)
-                .WithOne(va => va.Animal)
-                .HasForeignKey(va => va.AnimalId)
-                .OnDelete(DeleteBehavior.Cascade);
+            // TPT Strategie aktivieren
+            modelBuilder.Entity<Room>().UseTptMappingStrategy();
 
-            modelBuilder.Entity<Animal>().HasMany(a => a.ExternalZooStays)
-                .WithOne(ezs => ezs.Animal)
-                .HasForeignKey(ezs => ezs.AnimalId)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Animal>(entity =>
+            {
+                // Beziehung zu Species
+                entity.HasOne(a => a.Species)
+                    .WithMany()
+                    .HasForeignKey(a => a.SpeciesId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Beziehung zu AnimalEnclosure
+                entity.HasOne(a => a.CurrentEnclosure)
+                    .WithMany(e => e.Animals)
+                    .HasForeignKey(a => a.CurrentEnclosureId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                // Beziehung zu VeterinaryAppointments
+                entity.HasMany(a => a.VeterinaryAppointments)
+                    .WithOne(va => va.Animal)
+                    .HasForeignKey(va => va.AnimalId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Beziehung zu ExternalZooStays
+                entity.HasMany(a => a.ExternalZooStays)
+                    .WithOne(ezs => ezs.Animal)
+                    .HasForeignKey(ezs => ezs.AnimalId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Many-to-Many Beziehung zu Staff (Keepers)
+                entity.HasMany(a => a.Keepers)
+                    .WithMany(s => s.AssignedAnimals);
+            });
+
+            // AnimalEnclosure
+            modelBuilder.Entity<AnimalEnclosure>(entity =>
+            {
+                entity.HasMany(e => e.AllowedSpecies)
+                    .WithMany();
+            });
+
+            // Staff
+            modelBuilder.Entity<Staff>(entity =>
+            {
+                entity.HasMany(s => s.AuthorizedSpecies)
+                    .WithMany();
+            });
+
+            // StaffRooms
+            modelBuilder.Entity<StaffRooms>(entity =>
+            {
+                entity.HasMany(sr => sr.AuthorizedStaff)
+                    .WithMany();
+            });
+
+            // VisitorRoom
+            modelBuilder.Entity<VisitorRoom>(entity =>
+            {
+                entity.HasMany(vr => vr.Staff)
+                    .WithMany();
+            });
+
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
-            => options.UseSqlite(@"Data Source=Database/Zoorganize.db");
+        {
+            var projectPath = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.Parent.FullName;
+            var dbPath = Path.Combine(projectPath, "Database", "Zoorganize.db");
+
+            options.UseSqlite($"Data Source={dbPath}");
+        }
+            
 
         
     }

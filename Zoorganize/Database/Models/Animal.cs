@@ -1,26 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Zoorganize.Database.Models
+﻿namespace Zoorganize.Database.Models
 {
     public class Animal
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
+        public required string Name { get; set; }
         public Guid SpeciesId { get; set; }
         public Species Species { get; set; }
 
         public string? Note { get; set; }
-        public DateTime? DateOfBirth { get; set; }
+        public int? Age { get; set; }
         public DateOnly ArrivalDate { get; set; }
 
-        //TODO
-        //Keeper?
+        public List<Staff> Keepers { get; set; } = [];
 
         //Herkunft
-        public AnimalOrigin Origin { get; set; } 
-        public string? IdentificationTag { get; set; }
+        public AnimalOrigin Origin { get; set; }
 
         public List<ExternalZooStay> ExternalZooStays { get; set; } = [];
 

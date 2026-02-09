@@ -1,16 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-
-namespace Zoorganize.Database.Models
+﻿namespace Zoorganize.Database.Models
 {
-    public class Keeper
+    public class Staff
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
         public Sex Sex { get; set; }
-        public beschäftigunmgg
-
-            public EmploymentType EmploymentType { get; set; }
-        public float Paid
+        
+        public JobRole JobRole { get; set; }
+        public EmploymentType EmploymentType { get; set; }
+        public float YearlySalary { get; set; }
         public string? ContactInfo { get; set; }
         public string? Address { get; set; }
         public DateOnly HireDate { get; set; }
@@ -18,8 +16,8 @@ namespace Zoorganize.Database.Models
         public string? Notes { get; set; }
         public bool IsActive { get; set; }
 
-        public List<Species> ResponsibleSpecies { get; set; } = [];
-
+        public List<Species> AuthorizedSpecies { get; set; } = [];
+        public List<Animal> AssignedAnimals { get; set; } = [];
     }
     //Beschäftigungsart
     public enum  EmploymentType
@@ -30,7 +28,17 @@ namespace Zoorganize.Database.Models
         Volunteer,
         Contractor
     }
+
+    public enum JobRole
     {
-        
+        Keeper,
+        Veterinarian,
+        Guide,
+        Maintenance,
+        Administration,
+        Sales,
+        Security,
+        Other
     }
+
 }

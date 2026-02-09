@@ -3,8 +3,8 @@
     public class Species
     {
         public Guid Id { get; set; }
-        public string CommonName { get; set; }
-        public string ScientificName { get; set; }
+        public required string CommonName { get; set; }
+        public string? ScientificName { get; set; }
 
         //Haltung
         public double MinAreaPerAnimal { get; set; }
