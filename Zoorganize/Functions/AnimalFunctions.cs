@@ -5,17 +5,10 @@ using Zoorganize.Models.Api;
 
 namespace Zoorganize.Functions
 {
-    public class AnimalFunctions
+    public class AnimalFunctions(AppDbContext inContext, StaffFunctions? staffFunctions = null)
     {
-        private readonly AppDbContext inContext;
-        private StaffFunctions? staffFunctions;
-
-       
-        public AnimalFunctions(AppDbContext inContext, StaffFunctions? staffFunctions = null)
-        {
-            this.inContext = inContext;
-            this.staffFunctions = staffFunctions;
-        }
+        private readonly AppDbContext inContext = inContext;
+        private StaffFunctions? staffFunctions = staffFunctions;
 
         // Methode zum nachträglichen Setzen
         public void SetKeeperFunctions(StaffFunctions kf)
@@ -33,11 +26,7 @@ namespace Zoorganize.Functions
         public async Task<Species> GetSpeciesFromId(Guid id)
         {
             var species = await inContext.Species.FirstOrDefaultAsync(s => s.Id == id);
-            if(species == null)
-            {
-                throw new KeyNotFoundException($"Animal with ID {id} not found");
-            }
-            return species;
+            return species ?? throw new KeyNotFoundException($"Animal with ID {id} not found");
         }
         //alle Tiere 
         public async Task<List<Animal>> GetAnimals()
@@ -48,18 +37,14 @@ namespace Zoorganize.Functions
         public async Task<Animal> GetAnimalById(Guid animalId)
         {
             var animal = await inContext.Animals.FirstOrDefaultAsync(s => s.Id == animalId);
-            if (animal == null)
-            {
-                throw new KeyNotFoundException($"Animal with ID {animalId} not found");
-            }
-            return animal;
+            return animal ?? throw new KeyNotFoundException($"Animal with ID {animalId} not found");
         }
-        
+
         public async Task AddAnimal(AddAnimalType newAnimal)
         {
-            
-           var animal = new Animal
-           {
+
+            var animal = new Animal
+            {
                 Id = Guid.NewGuid(),
                 Name = newAnimal.Name,
                 SpeciesId = newAnimal.SpeciesId,
@@ -83,16 +68,17 @@ namespace Zoorganize.Functions
                 ExternalZooStays = [],
                 VeterinaryAppointments = [],
                 CurrentEnclosureId = newAnimal.CurrentEnclosureId,
-                KeeperId = newAnimal.KeeperId
-           };
+                KeeperId = newAnimal.KeeperId,
+                Species = await inContext.Species.FindAsync(newAnimal.SpeciesId)
+                    ?? throw new InvalidOperationException($"Species with ID {newAnimal.SpeciesId} not found."),
+                
+                //Lade CurrentEnclosure wenn gesetzt
 
-           animal.Species = await inContext.Species.FindAsync(animal.SpeciesId);
+                CurrentEnclosure = await inContext.AnimalEnclosures.FindAsync(newAnimal.CurrentEnclosureId),
 
-           //Lade CurrentEnclosure wenn gesetzt
-            
-            animal.CurrentEnclosure = await inContext.AnimalEnclosures.FindAsync(newAnimal.CurrentEnclosureId);
-            animal.Keeper = await staffFunctions.GetStaffById(newAnimal.KeeperId);
-            
+                Keeper = await (staffFunctions?.GetStaffById(newAnimal.KeeperId)
+                    ?? throw new InvalidOperationException("Unable to retrieve keeper."))
+            };
 
             inContext.Animals.Add(animal);
             await inContext.SaveChangesAsync();
@@ -114,8 +100,8 @@ namespace Zoorganize.Functions
                 IsSolitaryByNature = newSpecies.IsSolitaryByNature ?? false,
 
                 // Klimaanforderungen
-                MinTemperature = newSpecies.MinTemperature ?? 0,
-                MaxTemperature = newSpecies.MaxTemperature ?? 30,
+                MinTemperature = newSpecies.MinTemperature,
+                MaxTemperature = newSpecies.MaxTemperature,
                 MinHumidity = newSpecies.MinHumidity,
                 MaxHumidity = newSpecies.MaxHumidity,
                 RequiresOutdoorAccess = newSpecies.RequiresOutdoorAccess ?? false,
@@ -156,20 +142,20 @@ namespace Zoorganize.Functions
                 Description = newAppointment.Notes,
                 AnimalId = animalId,
                 Animal = await inContext.Animals.FindAsync(animalId)
+                    ?? throw new InvalidOperationException($"Animal with ID {animalId} not found.")
             };
 
             
             inContext.VeterinaryAppointments.Add(appointment);
             await inContext.SaveChangesAsync();
 
-            var animal = await inContext.Animals
+            return await inContext.Animals
                 .Include(a => a.VeterinaryAppointments)
                 .Include(a => a.Species)
                 .Include(a => a.CurrentEnclosure)
                 .Include(a => a.Keeper)
-                .FirstOrDefaultAsync(a => a.Id == animalId);
-
-            return animal;
+                .FirstOrDefaultAsync(a => a.Id == animalId)
+                ?? throw new InvalidOperationException($"Animal with ID {animalId} not found.");
         }
 
         public async Task<Animal> AddExternalZooStay(Guid animalId, AddExternalZooStayType newStay)
@@ -205,6 +191,7 @@ namespace Zoorganize.Functions
                 Description = newStay.Notes,
                 AnimalId = animalId,
                 Animal = await inContext.Animals.FindAsync(animalId)
+                    ?? throw new InvalidOperationException($"Animal with ID {animalId} not found.")
             };
 
             // Füge direkt zum Context hinzu
@@ -221,13 +208,7 @@ namespace Zoorganize.Functions
 
         public async Task<List<Animal>> DeleteAnimal(Guid animalId)
         {
-            var animal = await inContext.Animals.FindAsync(animalId);
-
-            if (animal == null)
-            {
-                throw new KeyNotFoundException($"Animal with ID {animalId} not found");
-            }
-
+            var animal = await inContext.Animals.FindAsync(animalId) ?? throw new KeyNotFoundException($"Animal with ID {animalId} not found");
             inContext.Animals.Remove(animal);
             await inContext.SaveChangesAsync();
 
@@ -236,13 +217,7 @@ namespace Zoorganize.Functions
 
         public async Task<List<Species>> DeleteSpecies(Guid speciesId)
         {
-            var species = await inContext.Species.FindAsync(speciesId);
-
-            if (species == null)
-            {
-                throw new KeyNotFoundException($"Species with ID {speciesId} not found");
-            }
-
+            var species = await inContext.Species.FindAsync(speciesId) ?? throw new KeyNotFoundException($"Species with ID {speciesId} not found");
             inContext.Species.Remove(species);
             await inContext.SaveChangesAsync();
 

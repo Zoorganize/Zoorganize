@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Zoorganize.Database.Models;
 
 namespace Zoorganize.Database

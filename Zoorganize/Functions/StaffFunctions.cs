@@ -15,11 +15,7 @@ namespace Zoorganize.Functions
 
         public async Task<Staff> GetStaffById(Guid staffId)
         {
-            var keeper =  await inContext.Staff.FirstOrDefaultAsync(s => s.Id == staffId);
-            if (keeper == null)
-            {
-                throw new KeyNotFoundException($"Staff with Id {staffId} not found");
-            }
+            var keeper = await inContext.Staff.FirstOrDefaultAsync(s => s.Id == staffId) ?? throw new KeyNotFoundException($"Staff with Id {staffId} not found");
             return keeper;
 
         }
@@ -30,12 +26,7 @@ namespace Zoorganize.Functions
                 .Where(s => s.JobRole == JobRole.Keeper)
                 .Include(s => s.AuthorizedSpecies)
                 .OrderBy(s => s.Name) 
-                .ToListAsync();
-
-            if (keepers == null)
-            {
-                throw new KeyNotFoundException($"Staff with Keeper Job not found");
-            }
+                .ToListAsync() ?? throw new KeyNotFoundException($"Staff with Keeper Job not found");
             return keepers;
         }
         public async Task<List<Staff>> AddPersonal(AddStaffType newStaff)
@@ -72,12 +63,7 @@ namespace Zoorganize.Functions
 
         public async Task<List<Staff>> DeletePersonal(Guid staffId)
         {
-            var staff = await inContext.Staff.FindAsync(staffId);
-            if (staff == null)
-            {
-                throw new KeyNotFoundException($"Staff with ID {staffId} not found");
-            }
-
+            var staff = await inContext.Staff.FindAsync(staffId) ?? throw new KeyNotFoundException($"Staff with ID {staffId} not found");
             inContext.Staff.Remove(staff);
             await inContext.SaveChangesAsync();
 

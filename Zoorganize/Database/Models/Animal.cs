@@ -5,7 +5,7 @@
         public Guid Id { get; set; }
         public required string Name { get; set; }
         public Guid SpeciesId { get; set; }
-        public Species Species { get; set; }
+        public required Species Species { get; set; }
 
         public string? Note { get; set; }
         public int? Age { get; set; }

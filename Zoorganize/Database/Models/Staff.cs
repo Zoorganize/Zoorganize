@@ -3,7 +3,7 @@
     public class Staff
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
+        public required string Name { get; set; }
         public Sex Sex { get; set; }
         
         public JobRole JobRole { get; set; }

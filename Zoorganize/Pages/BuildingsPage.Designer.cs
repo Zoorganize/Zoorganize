@@ -49,7 +49,7 @@ namespace Zoorganize.Pages
             button1.TabIndex = 0;
             button1.Text = "Zurück";
             button1.UseVisualStyleBackColor = true;
-            button1.Click += button1_Click;
+            button1.Click += Button1_Click;
             // 
             // label1
             // 
@@ -70,7 +70,7 @@ namespace Zoorganize.Pages
             penButton.TabIndex = 2;
             penButton.Text = "Gehege";
             penButton.UseVisualStyleBackColor = true;
-            penButton.Click += penButton_Click;
+            penButton.Click += PenButton_Click;
             // 
             // workerButton
             // 
@@ -81,7 +81,7 @@ namespace Zoorganize.Pages
             workerButton.TabIndex = 3;
             workerButton.Text = "Mitarbeiter";
             workerButton.UseVisualStyleBackColor = true;
-            workerButton.Click += workerButton_Click;
+            workerButton.Click += WorkerButton_Click;
             // 
             // visitorButton
             // 
@@ -92,7 +92,7 @@ namespace Zoorganize.Pages
             visitorButton.TabIndex = 4;
             visitorButton.Text = "Besucher";
             visitorButton.UseVisualStyleBackColor = true;
-            visitorButton.Click += visitorButton_Click;
+            visitorButton.Click += VisitorButton_Click;
             // 
             // addBuilding
             // 
@@ -102,7 +102,7 @@ namespace Zoorganize.Pages
             addBuilding.TabIndex = 5;
             addBuilding.Text = "Neues Gebäude hinzufügen";
             addBuilding.UseVisualStyleBackColor = true;
-            addBuilding.Click += button2_Click;
+            addBuilding.Click += Button2_Click;
             // 
             // showBuildings
             // 
@@ -119,7 +119,7 @@ namespace Zoorganize.Pages
             delete.Size = new Size(150, 25);
             delete.TabIndex = 0;
             delete.Text = "Löschen";
-            delete.Click += delete_Click;
+            delete.Click += Delete_Click;
             // 
             // BuildingsPage
             // 

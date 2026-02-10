@@ -42,7 +42,7 @@ namespace Zoorganize.Pages
         }
 
         //Button zum zurückkehren zum Hauptmenü
-        private void button1_Click(object sender, EventArgs e)
+        private void Button1_Click(object sender, EventArgs e)
         {
             MainPage mainPage = new()
             {
@@ -54,80 +54,74 @@ namespace Zoorganize.Pages
             mainPage.Show();
         }
 
-        private async void delete_Click(object sender, EventArgs e)
+        private async void Delete_Click(object sender, EventArgs e)
         {
-            using (DeleteAnimalsForm form = new DeleteAnimalsForm(animals))
+            using DeleteAnimalsForm form = new(animals);
+            if (form.ShowDialog() == DialogResult.OK)
             {
-                if (form.ShowDialog() == DialogResult.OK)
+                try
                 {
-                    try
+                    // Tiere aus der DATENBANK löschen
+                    foreach (Animal animal in form.AnimalToDelete)
                     {
-                        // Tiere aus der DATENBANK löschen
-                        foreach (Animal animal in form.animaltodelete)
-                        {
-                            await animalFunctions.DeleteAnimal(animal.Id);
-                        }
-
-                        // Liste komplett neu laden
-                        LoadAnimals();
-
-                        // UI aktualisieren
-                        RefreshSpeciesButtons();
-                        animalOverview.Controls.Clear();
-
-                        MessageBox.Show(
-                            $"{form.animaltodelete.Count} Tier(e) erfolgreich gelöscht!",
-                            "Erfolg",
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Information);
+                        await animalFunctions.DeleteAnimal(animal.Id);
                     }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(
-                            $"Fehler beim Löschen: {ex.Message}",
-                            "Fehler",
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Error);
-                    }
+
+                    // Liste komplett neu laden
+                    LoadAnimals();
+
+                    // UI aktualisieren
+                    RefreshSpeciesButtons();
+                    animalOverview.Controls.Clear();
+
+                    MessageBox.Show(
+                        $"{form.AnimalToDelete.Count} Tier(e) erfolgreich gelöscht!",
+                        "Erfolg",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        $"Fehler beim Löschen: {ex.Message}",
+                        "Fehler",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
                 }
             }
         }
 
         //Button der eine neue  Instanz von Animal erstellt und diese in die Liste der Tiere hinzufügt
         //Dieser Button öffnet ein Fenster, wo Informationen über das Tier eingegeben werden können
-        private async void addAnimal_Click(object sender, EventArgs e)
+        private async void AddAnimal_Click(object sender, EventArgs e)
         {
-            using (var dlg = new AnimalForm(animalFunctions, roomFunctions, staffFunctions))
+            using var dlg = new AnimalForm(animalFunctions, roomFunctions, staffFunctions);
+            dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
+            dlg.ShowInTaskbar = false;
+            dlg.StartPosition = FormStartPosition.CenterParent;
+
+            if (dlg.ShowDialog(this) == DialogResult.OK)
             {
-                dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
-                dlg.ShowInTaskbar = false;
-                dlg.StartPosition = FormStartPosition.CenterParent;
+                animals = await animalFunctions.GetAnimals();
 
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    animals = await animalFunctions.GetAnimals();
+                // UI aktualisieren
+                RefreshAnimalButtons();
 
-                    // UI aktualisieren
-                    RefreshAnimalButtons();
-
-                }
             }
         }
 
         private async void AddSpecies_Click(object sender, EventArgs e)
         {
-            using (var dlg = new SpeciesForm(animalFunctions))
-            {
-                dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
-                dlg.ShowInTaskbar = false;
-                dlg.StartPosition = FormStartPosition.CenterParent;
+            using var dlg = new SpeciesForm(animalFunctions);
+            dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
+            dlg.ShowInTaskbar = false;
+            dlg.StartPosition = FormStartPosition.CenterParent;
 
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    MessageBox.Show("Tierart erfolgreich hinzugefügt!");
-                    LoadSpecies(); 
-                    RefreshSpeciesButtons(); 
-                }
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                MessageBox.Show("Tierart erfolgreich hinzugefügt!");
+                LoadSpecies();
+                RefreshSpeciesButtons();
             }
         }
         private void RefreshAnimalButtons()
@@ -142,7 +136,7 @@ namespace Zoorganize.Pages
                 // Prüfe ob Species geladen wurde
                 string speciesName = animal.Species?.CommonName ?? "Unbekannte Art";
 
-                Button animalButton = new Button
+                Button animalButton = new()
                 {
                     Text = $"{animal.Name} ({speciesName})",
                     AutoSize = true,
@@ -157,7 +151,7 @@ namespace Zoorganize.Pages
             typeOverview.Controls.Clear();
             foreach (var spec in species.OrderBy(s => s.CommonName))
             {
-                Button speciesButton = new Button
+                Button speciesButton = new()
                 {
                     Text = spec.CommonName,
                     AutoSize = true,
@@ -173,7 +167,7 @@ namespace Zoorganize.Pages
         //Wenn auf eine Tierart geklickt wird, werden alle Tiere dieser Art in der Tierübersicht angezeigt
         private void SpeciesButton_Click(object? sender, EventArgs e)
         {
-            if ((sender as Button)?.Tag is Guid speciesId)
+            if (sender is Button { Tag: Guid speciesId })
             {
                 ShowAnimalsOfSpecies(speciesId);
             }
@@ -186,9 +180,9 @@ namespace Zoorganize.Pages
                 .Where(a => a.SpeciesId == speciesId) 
                 .ToList();
 
-            if (!filteredAnimals.Any())
+            if (filteredAnimals.Count == 0)
             {
-                Label noAnimalsLabel = new Label
+                Label noAnimalsLabel = new()
                 {
                     Text = "Keine Tiere dieser Art vorhanden",
                     AutoSize = true,
@@ -200,7 +194,7 @@ namespace Zoorganize.Pages
 
             foreach (var animal in filteredAnimals.OrderBy(a => a.Name))
             {
-                Button animalButton = new Button
+                Button animalButton = new()
                 {
                     Text = animal.Name,
                     AutoSize = true,
@@ -214,7 +208,7 @@ namespace Zoorganize.Pages
         //Wenn auf ein Tier geklickt wird, öffnet sich ein Fenster, welches Informationen über das Tier anzeigt
         private void AnimalButton_Click(object? sender, EventArgs e)
         {
-            if ((sender as Button)?.Tag is Animal animal)
+            if (sender is Button { Tag: Animal animal })
             {
                 selectedAnimal = animal;
 
@@ -230,7 +224,7 @@ namespace Zoorganize.Pages
             
             private readonly Animal _animal;
             private readonly AnimalFunctions _animalFunctions;
-            public TextBox txtDetails = new TextBox();
+            public TextBox txtDetails = new();
             
 
 
@@ -239,8 +233,8 @@ namespace Zoorganize.Pages
                 _animal = animal;
                 _animalFunctions = animalFunctions;
 
-                Button vetAppointment = new Button();
-                Button lendAnimal = new Button();
+                Button vetAppointment = new();
+                Button lendAnimal = new();
 
                 vetAppointment.Text = "Tierarzt Besuch hinzufügen";
                 vetAppointment.Click += VetAppointment_Click;
@@ -305,7 +299,7 @@ namespace Zoorganize.Pages
                 Text = $"Details: {_animal.Name}";
             }
 
-            private async void VetAppointment_Click(object sender, EventArgs e)
+            private async void VetAppointment_Click(object? sender, EventArgs e)
             {
                 using var form = new InputAppointment();
 
@@ -344,9 +338,9 @@ namespace Zoorganize.Pages
                 }
             }
 
-            private void ShowAnimalAppointments(Animal animal)
+            private static void ShowAnimalAppointments(Animal animal)
             {
-                if (animal.VeterinaryAppointments == null || !animal.VeterinaryAppointments.Any())
+                if (animal.VeterinaryAppointments == null || animal.VeterinaryAppointments.Count == 0)
                 {
                     MessageBox.Show("Keine Termine vorhanden.", "Termine", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
@@ -366,7 +360,7 @@ namespace Zoorganize.Pages
                 MessageBox.Show(appointments, "Tierarzttermine", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
 
-            private async void LendAnimal_Click(object sender, EventArgs e)
+            private async void LendAnimal_Click(object? sender, EventArgs e)
             {
                 using var form = new LendAnimal();
 
@@ -411,9 +405,9 @@ namespace Zoorganize.Pages
                 }
             }
 
-            private void ShowAnimalStays(Animal animal)
+            private static void ShowAnimalStays(Animal animal)
             {
-                if (animal.ExternalZooStays == null || !animal.ExternalZooStays.Any())
+                if (animal.ExternalZooStays == null || animal.ExternalZooStays.Count == 0)
                 {
                     MessageBox.Show("Keine Zoo-Aufenthalte vorhanden.", "Aufenthalte", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
@@ -440,9 +434,9 @@ namespace Zoorganize.Pages
         public class InputAppointment : Form
         {
             
-            private TextBox txtTitle;
-            private DateTimePicker dtpDate;
-            private TextBox txtNotes;
+            private readonly TextBox txtTitle;
+            private readonly DateTimePicker dtpDate;
+            private readonly TextBox txtNotes;
 
             public string AppointmentName => txtTitle.Text;
             public DateTime AppointmentDate => dtpDate.Value;
@@ -459,10 +453,10 @@ namespace Zoorganize.Pages
                 MaximizeBox = false;
                 MinimizeBox = false;
 
-                Label lblName = new Label { Text = "Terminname:", Left = 10, Top = 15, Width = 120 };
+                Label lblName = new() { Text = "Terminname:", Left = 10, Top = 15, Width = 120 };
                 txtTitle = new TextBox { Left = 140, Top = 12, Width = 220 };
 
-                Label lblDate = new Label { Text = "Datum:", Left = 10, Top = 50, Width = 120 };
+                Label lblDate = new() { Text = "Datum:", Left = 10, Top = 50, Width = 120 };
                 dtpDate = new DateTimePicker
                 {
                     Left = 140,
@@ -471,7 +465,7 @@ namespace Zoorganize.Pages
                     Format = DateTimePickerFormat.Short
                 };
 
-                Label lblNotes = new Label { Text = "Notizen:", Left = 10, Top = 85, Width = 120 };
+                Label lblNotes = new() { Text = "Notizen:", Left = 10, Top = 85, Width = 120 };
                 txtNotes = new TextBox
                 {
                     Left = 140,
@@ -482,23 +476,23 @@ namespace Zoorganize.Pages
                     ScrollBars = ScrollBars.Vertical
                 };
 
-                Button btnOk = new Button { Text = "OK", Left = 200, Top = 180, DialogResult = DialogResult.OK };
-                Button btnCancel = new Button { Text = "Abbrechen", Left = 280, Top = 180, DialogResult = DialogResult.Cancel };
+                Button btnOk = new() { Text = "OK", Left = 200, Top = 180, DialogResult = DialogResult.OK };
+                Button btnCancel = new() { Text = "Abbrechen", Left = 280, Top = 180, DialogResult = DialogResult.Cancel };
 
                 btnOk.Click += BtnOk_Click; //Validierung hinzugefügt
 
                 AcceptButton = btnOk;
                 CancelButton = btnCancel;
 
-                Controls.AddRange(new Control[]
-                {
+                Controls.AddRange(
+                [
                     lblName, txtTitle ,
                     lblDate, dtpDate,
                     lblNotes, txtNotes,
                     btnOk, btnCancel
-                });
+                ]);
             }
-            private async void BtnOk_Click(object sender, EventArgs e)
+            private async void BtnOk_Click(object? sender, EventArgs e)
             {
                 if (string.IsNullOrWhiteSpace(txtTitle.Text))
                 {
@@ -511,12 +505,12 @@ namespace Zoorganize.Pages
 
         public class LendAnimal : Form
         {
-            private TextBox txtZooName;
-            private DateTimePicker dtpStart;
-            private DateTimePicker dtpEnd;
-            private CheckBox chkHasEndDate;
-            private Label lblEnd;
-            private TextBox txtNotes;
+            private readonly TextBox txtZooName;
+            private readonly DateTimePicker dtpStart;
+            private readonly DateTimePicker dtpEnd;
+            private readonly CheckBox chkHasEndDate;
+            private readonly Label lblEnd;
+            private readonly TextBox txtNotes;
 
             public string ZooName => txtZooName.Text;
             public DateTime StartDate => dtpStart.Value;
@@ -533,10 +527,10 @@ namespace Zoorganize.Pages
                 MaximizeBox = false;
                 MinimizeBox = false;
 
-                Label lblZoo = new Label { Text = "Zoo-Name:", Left = 10, Top = 15, Width = 120 };
+                Label lblZoo = new() { Text = "Zoo-Name:", Left = 10, Top = 15, Width = 120 };
                 txtZooName = new TextBox { Left = 140, Top = 12, Width = 220 };
 
-                Label lblStart = new Label { Text = "Startdatum:", Left = 10, Top = 50, Width = 120 };
+                Label lblStart = new() { Text = "Startdatum:", Left = 10, Top = 50, Width = 120 };
                 dtpStart = new DateTimePicker
                 {
                     Left = 140,
@@ -555,7 +549,7 @@ namespace Zoorganize.Pages
                 };
                 chkHasEndDate.CheckedChanged += ChkHasEndDate_CheckedChanged;
 
-                Label lblEnd = new Label { Text = "Enddatum:", Left = 10, Top = 85, Width = 120 };
+                lblEnd = new Label { Text = "Enddatum:", Left = 10, Top = 85, Width = 120, Visible = false };
                 dtpEnd = new DateTimePicker
                 {
                     Left = 140,
@@ -565,7 +559,7 @@ namespace Zoorganize.Pages
                     Visible = false
                 };
 
-                Label lblNotes = new Label { Text = "Notizen:", Left = 10, Top = 120, Width = 120 };
+                Label lblNotes = new() { Text = "Notizen:", Left = 10, Top = 120, Width = 120 };
                 txtNotes = new TextBox
                 {
                     Left = 140,
@@ -576,31 +570,32 @@ namespace Zoorganize.Pages
                     ScrollBars = ScrollBars.Vertical
                 };
 
-                Button btnOk = new Button { Text = "OK", Left = 200, Top = 230, DialogResult = DialogResult.OK };
-                Button btnCancel = new Button { Text = "Abbrechen", Left = 280, Top = 230, DialogResult = DialogResult.Cancel };
+                Button btnOk = new() { Text = "OK", Left = 200, Top = 230, DialogResult = DialogResult.OK };
+                Button btnCancel = new() { Text = "Abbrechen", Left = 280, Top = 230, DialogResult = DialogResult.Cancel };
 
                 btnOk.Click += BtnOk_Click;
 
                 AcceptButton = btnOk;
                 CancelButton = btnCancel;
 
-                Controls.AddRange(new Control[]
-                {
+                Controls.AddRange(
+                [
                     lblZoo, txtZooName,
                     lblStart, dtpStart,
                     lblEnd, dtpEnd,
+                    chkHasEndDate,
                     lblNotes, txtNotes,
                     btnOk, btnCancel
-                });
+                ]);
             }
 
-            private void ChkHasEndDate_CheckedChanged(object sender, EventArgs e)
+            private void ChkHasEndDate_CheckedChanged(object? sender, EventArgs e)
             {
                 lblEnd.Visible = chkHasEndDate.Checked;
                 dtpEnd.Visible = chkHasEndDate.Checked;
             }
 
-            private void BtnOk_Click(object sender, EventArgs e)
+            private void BtnOk_Click(object? sender, EventArgs e)
             {
                 if (string.IsNullOrWhiteSpace(txtZooName.Text))
                 {
@@ -624,34 +619,38 @@ namespace Zoorganize.Pages
             private readonly RoomFunctions _roomFunctions;
             private readonly StaffFunctions _staffFunctions;
 
-            TextBox name = new TextBox();
-            ComboBox speciesCombo = new ComboBox();
-            TextBox age = new TextBox();
-            TextBox note = new TextBox();
-            DateTimePicker arrivalDate = new DateTimePicker();
+            private readonly TextBox name = new();
 
-            ComboBox origin = new ComboBox();
-            ComboBox sex = new ComboBox();
-            CheckBox isNeutered = new CheckBox();
-            CheckBox isPregnant = new CheckBox();
+            private readonly ComboBox speciesCombo = new();
 
-            ComboBox enclosureCombo = new ComboBox();
+            private readonly TextBox age = new();
+            private readonly TextBox note = new();
 
-            ComboBox currentKeeper = new();
+            private readonly DateTimePicker arrivalDate = new();
 
-            ComboBox healthStatus = new ComboBox();
-            TextBox weightKg = new TextBox();
-            CheckBox inQuarantine = new CheckBox();
+            private readonly ComboBox origin = new();
+            private readonly ComboBox sex = new();
 
-            CheckBox aggressive = new CheckBox();
-            CheckBox requiresSeparation = new CheckBox();
-            TextBox behavioralNotes = new TextBox();
+            private readonly CheckBox isNeutered = new();
+            private readonly CheckBox isPregnant = new();
 
-            Button submit = new Button();
+            private readonly ComboBox enclosureCombo = new();
+            private readonly ComboBox currentKeeper = new();
+            private readonly ComboBox healthStatus = new();
 
-            private List<Staff> allKeepers = new List<Staff>();
+            private readonly TextBox weightKg = new();
 
-            public Animal animal { get; private set; }
+            private readonly CheckBox inQuarantine = new();
+            private readonly CheckBox aggressive = new();
+            private readonly CheckBox requiresSeparation = new();
+
+            private readonly TextBox behavioralNotes = new();
+
+            private readonly Button submit = new();
+
+            private List<Staff> allKeepers = [];
+
+            public Animal Animal { get; private set; } = null!;
 
             public AnimalForm(AnimalFunctions animalFunctions, RoomFunctions roomFunctions, StaffFunctions staffFunctions)
             {
@@ -719,7 +718,8 @@ namespace Zoorganize.Pages
                 origin.Top = top;
                 origin.Width = controlWidth;
                 origin.DropDownStyle = ComboBoxStyle.DropDownList;
-                origin.Items.AddRange(Enum.GetNames(typeof(AnimalOrigin)));
+                origin.DataSource = null;
+                origin.Items.AddRange(Enum.GetNames<AnimalOrigin>());
                 origin.SelectedIndex = 0;
                 Controls.Add(origin);
                 top += spacing;
@@ -730,7 +730,7 @@ namespace Zoorganize.Pages
                 sex.Width = controlWidth;
                 sex.DropDownStyle = ComboBoxStyle.DropDownList;
                 sex.Items.Add("(Nicht angegeben)");
-                sex.Items.AddRange(Enum.GetNames(typeof(Sex)));
+                sex.Items.AddRange(Enum.GetNames<Sex>());
                 sex.SelectedIndex = 0;
                 Controls.Add(sex);
                 top += spacing;
@@ -783,7 +783,7 @@ namespace Zoorganize.Pages
                 healthStatus.Width = controlWidth;
                 healthStatus.DropDownStyle = ComboBoxStyle.DropDownList;
                 healthStatus.Items.Add("(Nicht angegeben)");
-                healthStatus.Items.AddRange(Enum.GetNames(typeof(HealthStatus)));
+                healthStatus.Items.AddRange(Enum.GetNames<HealthStatus>());
                 healthStatus.SelectedIndex = 0;
                 Controls.Add(healthStatus);
                 top += spacing;
@@ -846,7 +846,7 @@ namespace Zoorganize.Pages
 
             private void AddLabel(string text, int left, int top)
             {
-                Label label = new Label
+                Label label = new()
                 {
                     Text = text,
                     Left = left,
@@ -903,7 +903,7 @@ namespace Zoorganize.Pages
                 }
             }
 
-            private void SpeciesCombo_SelectedIndexChanged(object sender, EventArgs e)
+            private void SpeciesCombo_SelectedIndexChanged(object? sender, EventArgs e)
             {
                 if (speciesCombo.SelectedValue is Guid selectedSpeciesId)
                 {
@@ -920,7 +920,7 @@ namespace Zoorganize.Pages
                     .OrderBy(k => k.Name)
                     .ToList();
 
-                if (authorizedKeepers.Any())
+                if (authorizedKeepers.Count != 0)
                 {
                     foreach (var keeper in authorizedKeepers)
                     {
@@ -933,7 +933,7 @@ namespace Zoorganize.Pages
                 }
                 else
                 {
-                    Label noKeeperLabel = new Label
+                    Label noKeeperLabel = new()
                     {
                         Text = "(Keine autorisierten Pfleger)",
                         ForeColor = Color.Gray
@@ -1039,14 +1039,14 @@ namespace Zoorganize.Pages
                     MessageBox.Show($"Fehler: {ex.Message}", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-            private int? ParseInt(string text)
+            private static int? ParseInt(string text)
             {
                 if (string.IsNullOrWhiteSpace(text))
                     return null;
                 return int.TryParse(text, out var result) ? result : null;
             }
 
-            private double? ParseDouble(string text)
+            private static double? ParseDouble(string text)
             {
                 if (string.IsNullOrWhiteSpace(text))
                     return null;
@@ -1059,32 +1059,32 @@ namespace Zoorganize.Pages
             private readonly AnimalFunctions _animalFunctions;
 
             // Basis-Informationen
-            TextBox commonName = new TextBox();
-            TextBox scientificName = new TextBox();
+            private readonly TextBox commonName = new();
+            private readonly TextBox scientificName = new();
 
             // Haltung
-            CheckBox isSolitaryByNature = new CheckBox();
+            private readonly CheckBox isSolitaryByNature = new();
 
             // Klimaanforderungen
-            TextBox minTemperature = new TextBox();
-            TextBox maxTemperature = new TextBox();
-            TextBox minHumidity = new TextBox();
-            TextBox maxHumidity = new TextBox();
-            CheckBox requiresOutdoorAccess = new CheckBox();
+            private readonly TextBox minTemperature = new();
+            private readonly TextBox maxTemperature = new();
+            private readonly TextBox minHumidity = new();
+            private readonly TextBox maxHumidity = new();
+            private readonly CheckBox requiresOutdoorAccess = new();
 
             // Sicherheitsmerkmale
-            ComboBox requiredSecurityLevel = new ComboBox();
-            CheckBox isDangerous = new CheckBox();
-            CheckBox requiresSpecialPermit = new CheckBox();
+            private readonly ComboBox requiredSecurityLevel = new();
+            private readonly CheckBox isDangerous = new();
+            private readonly CheckBox requiresSpecialPermit = new();
 
             // Infrastruktur
-            CheckBox requiresWaterFeature = new CheckBox();
-            CheckBox requiresClimbingStructures = new CheckBox();
-            CheckBox requiresShelter = new CheckBox();
+            private readonly CheckBox requiresWaterFeature = new();
+            private readonly CheckBox requiresClimbingStructures = new();
+            private readonly CheckBox requiresShelter = new();
 
-            Button submit = new Button();
+            private readonly Button submit = new();
 
-            public Species species { get; private set; }
+            public Species Species { get; private set; } = null!;
 
             public SpeciesForm(AnimalFunctions animalFunctions)
             {
@@ -1177,7 +1177,7 @@ namespace Zoorganize.Pages
                 requiredSecurityLevel.Top = top;
                 requiredSecurityLevel.Width = controlWidth;
                 requiredSecurityLevel.DropDownStyle = ComboBoxStyle.DropDownList;
-                requiredSecurityLevel.Items.AddRange(Enum.GetNames(typeof(SecurityLevel)));
+                requiredSecurityLevel.Items.AddRange(Enum.GetNames<SecurityLevel>());
                 requiredSecurityLevel.SelectedIndex = 0;
                 Controls.Add(requiredSecurityLevel);
                 top += spacing;
@@ -1235,7 +1235,7 @@ namespace Zoorganize.Pages
 
             private void AddLabel(string text, int left, int top)
             {
-                Label label = new Label
+                Label label = new()
                 {
                     Text = text,
                     Left = left,
@@ -1285,14 +1285,14 @@ namespace Zoorganize.Pages
                 }
             }
 
-            private double? ParseDouble(string text)
+            private static double? ParseDouble(string text)
             {
                 if (string.IsNullOrWhiteSpace(text))
                     return null;
                 return double.TryParse(text, out var result) ? result : null;
             }
 
-            private int? ParseInt(string text)
+            private static int? ParseInt(string text)
             {
                 if (string.IsNullOrWhiteSpace(text))
                     return null;
@@ -1303,15 +1303,16 @@ namespace Zoorganize.Pages
 
         public partial class DeleteAnimalsForm : Form
         {
-            private List<Animal> addedanimals;
-            public List<Animal> animaltodelete { get; private set; } = new List<Animal>();
-            private FlowLayoutPanel flowAnimals = new FlowLayoutPanel();
-            private Button btnDelete = new Button();
-            private Button btnCancel = new Button();
+            private readonly List<Animal> addedAnimals;
+            public List<Animal> AnimalToDelete { get; private set; } = [];
+            private readonly FlowLayoutPanel flowAnimals = new();
+            
+            private readonly Button btnDelete = new();
+            private readonly Button btnCancel = new();
 
             public DeleteAnimalsForm(List<Animal> animals)
             {
-                this.addedanimals = animals;
+                this.addedAnimals = animals;
                 flowAnimals.Top = 20;
                 flowAnimals.Left = 20;
 
@@ -1329,8 +1330,8 @@ namespace Zoorganize.Pages
                 Controls.Add(btnDelete);
                 Controls.Add(btnCancel);
 
-                btnDelete.Click += btnDelete_Click;
-                btnCancel.Click += btnCancel_Click;
+                btnDelete.Click += BtnDelete_Click;
+                btnCancel.Click += BtnCancel_Click;
             }
 
             private void BuildCheckboxList()
@@ -1340,9 +1341,9 @@ namespace Zoorganize.Pages
                 flowAnimals.WrapContents = false;
                 flowAnimals.AutoScroll = true;
 
-                if (!addedanimals.Any())
+                if (addedAnimals.Count == 0)
                 {
-                    Label noAnimalsLabel = new Label
+                    Label noAnimalsLabel = new()
                     {
                         Text = "Keine Tiere vorhanden",
                         AutoSize = true,
@@ -1353,30 +1354,32 @@ namespace Zoorganize.Pages
                     return;
                 }
 
-                foreach (var animal in addedanimals.OrderBy(a => a.Name))
+                foreach (var animal in addedAnimals.OrderBy(a => a.Name))
                 {
-                    CheckBox cb = new CheckBox();
-                    cb.Text = $"{animal.Name} ({animal.Species.CommonName})";
-                    cb.AutoSize = true;
-                    cb.Tag = animal; // store reference
+                CheckBox cb = new()
+                {
+                    Text = $"{animal.Name} ({animal.Species.CommonName})",
+                    AutoSize = true,
+                    Tag = animal 
+                };
 
-                    flowAnimals.Controls.Add(cb);
+                flowAnimals.Controls.Add(cb);
                 }
             }
 
-            private void btnDelete_Click(object sender, EventArgs e)
+            private void BtnDelete_Click(object? sender, EventArgs e)
             {
-                animaltodelete.Clear();
+                AnimalToDelete.Clear();
 
                 foreach (CheckBox cb in flowAnimals.Controls)
                 {
                     if (cb.Checked && cb.Tag is Animal animal)
                     {
-                        animaltodelete.Add((Animal)cb.Tag);
+                        AnimalToDelete.Add((Animal)cb.Tag);
                     }
                 }
 
-                if (!animaltodelete.Any())
+                if (AnimalToDelete.Count == 0)
                 {
                     MessageBox.Show(
                         "Bitte wählen Sie mindestens ein Tier zum Löschen aus.",
@@ -1387,8 +1390,8 @@ namespace Zoorganize.Pages
                 }
 
                 var result = MessageBox.Show(
-                $"Möchten Sie wirklich {animaltodelete.Count} Tier(e) löschen?\n\n" +
-                string.Join("\n", animaltodelete.Select(a => $"• {a.Name}")),
+                $"Möchten Sie wirklich {AnimalToDelete.Count} Tier(e) löschen?\n\n" +
+                string.Join("\n", AnimalToDelete.Select(a => $"• {a.Name}")),
                 "Löschen bestätigen",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning,
@@ -1401,7 +1404,7 @@ namespace Zoorganize.Pages
                 }
         }
 
-            private void btnCancel_Click(object sender, EventArgs e)
+            private void BtnCancel_Click(object? sender, EventArgs e)
             {
                 DialogResult = DialogResult.Cancel;
                 Close();

@@ -1,6 +1,4 @@
-﻿using Zoorganize.Database.Models;
-
-namespace Zoorganize.Models.Api
+﻿namespace Zoorganize.Models.Api
 {
     public class AddSpeciesType
     {

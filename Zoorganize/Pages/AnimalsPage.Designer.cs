@@ -50,7 +50,7 @@ namespace Zoorganize.Pages
             button1.TabIndex = 0;
             button1.Text = "Zurück";
             button1.UseVisualStyleBackColor = true;
-            button1.Click += button1_Click;
+            button1.Click += Button1_Click;
             //
             //detele Button
             //
@@ -60,7 +60,7 @@ namespace Zoorganize.Pages
             delete.Size = new Size(150, 31);
             delete.TabIndex = 0;
             delete.Text = "Löschen";
-            delete.Click += delete_Click;
+            delete.Click += Delete_Click;
             //
             // label1
             // 
@@ -81,7 +81,7 @@ namespace Zoorganize.Pages
             addAnimal.TabIndex = 2;
             addAnimal.Text = "Neues Tier anlegen";
             addAnimal.UseVisualStyleBackColor = true;
-            addAnimal.Click += addAnimal_Click;
+            addAnimal.Click += AddAnimal_Click;
             //
             //add Species Button
             //

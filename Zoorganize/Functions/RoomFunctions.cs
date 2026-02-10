@@ -87,12 +87,7 @@ namespace Zoorganize.Functions
 
         public async Task DeleteRoom(Guid roomId)
         {
-            var room = await context.Rooms.FindAsync(roomId);
-            if (room == null)
-            {
-                throw new KeyNotFoundException($"Room with ID {roomId} not found");
-            }
-
+            var room = await context.Rooms.FindAsync(roomId) ?? throw new KeyNotFoundException($"Room with ID {roomId} not found");
             context.Rooms.Remove(room);
             await context.SaveChangesAsync();
         }

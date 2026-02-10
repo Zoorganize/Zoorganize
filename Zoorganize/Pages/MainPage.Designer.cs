@@ -46,7 +46,7 @@
             button1.TabIndex = 0;
             button1.Text = "Tiere";
             button1.UseVisualStyleBackColor = true;
-            button1.Click += button1_Click;
+            button1.Click += Button1_Click;
             // 
             // label1
             // 
@@ -54,9 +54,9 @@
             label1.Font = new Font("Segoe UI", 25F);
             label1.Location = new Point(12, 9);
             label1.Name = "label1";
-            label1.Size = new Size(258, 46);
+            label1.Size = new Size(194, 46);
             label1.TabIndex = 1;
-            label1.Text = "Zoo Name Here";
+            label1.Text = "ZoOrganize";
             // 
             // button2
             // 
@@ -67,7 +67,7 @@
             button2.TabIndex = 2;
             button2.Text = "Gebäude";
             button2.UseVisualStyleBackColor = true;
-            button2.Click += button2_Click;
+            button2.Click += Button2_Click;
             // 
             // button3
             // 
@@ -78,7 +78,7 @@
             button3.TabIndex = 3;
             button3.Text = "Mitarbeiter";
             button3.UseVisualStyleBackColor = true;
-            button3.Click += button3_Click;
+            button3.Click += Button3_Click;
             // 
             // sqliteCommand1
             // 
